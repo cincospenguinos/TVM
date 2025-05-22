@@ -31,3 +31,8 @@ func TestTsvetokVirtualMachine_MultipliesProperlyInMemoryMode(t *testing.T) {
 	result := machine.GetMemory()
 	assert.Equal(t, 4, result[0])
 }
+
+func TestTsvetokVirtualMachine_GivesErrorForInvalidOpcode(t *testing.T) {
+	machine := NewTsvetokVirtualMachine([]int{-1234})
+	require.Error(t, machine.Execute())
+}
