@@ -16,7 +16,7 @@ type TVMOperation interface {
 
 // haltOperation does nothing and informs the machine that it is time to halt
 type haltOperation struct {
-	machine *TsvetokVirtualMachine
+	*TsvetokVirtualMachine
 }
 
 func newHaltOperation(t *TsvetokVirtualMachine) haltOperation {
@@ -27,13 +27,13 @@ func (_ haltOperation) Execute() error {
 	return nil
 }
 
-func (h haltOperation) GetNextProgramCounter() int { return h.machine.getProgramCounter() }
+func (h haltOperation) GetNextProgramCounter() int { return h.getProgramCounter() }
 
 func (_ haltOperation) Halt() bool { return true }
 
 // addOperation adds two numbers together
 type addOperation struct {
-	machine *TsvetokVirtualMachine
+	*TsvetokVirtualMachine
 }
 
 func newAddOperation(t *TsvetokVirtualMachine) addOperation {
@@ -41,8 +41,8 @@ func newAddOperation(t *TsvetokVirtualMachine) addOperation {
 }
 
 func (a addOperation) Execute() error {
-	memory := a.machine.getMemory()
-	programCounter := a.machine.getProgramCounter()
+	memory := a.getMemory()
+	programCounter := a.getProgramCounter()
 
 	leftAddr := memory[programCounter+1]
 	rightAddr := memory[programCounter+2]
@@ -53,13 +53,13 @@ func (a addOperation) Execute() error {
 	return nil
 }
 
-func (a addOperation) GetNextProgramCounter() int { return a.machine.getProgramCounter() + 4 }
+func (a addOperation) GetNextProgramCounter() int { return a.getProgramCounter() + 4 }
 
 func (_ addOperation) Halt() bool { return false }
 
 // multiplyOperation multiplies two nubmers together
 type multiplyOperation struct {
-	machine *TsvetokVirtualMachine
+	*TsvetokVirtualMachine
 }
 
 func newMultiplyOperation(t *TsvetokVirtualMachine) multiplyOperation {
@@ -67,8 +67,8 @@ func newMultiplyOperation(t *TsvetokVirtualMachine) multiplyOperation {
 }
 
 func (m multiplyOperation) Execute() error {
-	memory := m.machine.getMemory()
-	programCounter := m.machine.getProgramCounter()
+	memory := m.getMemory()
+	programCounter := m.getProgramCounter()
 
 	leftAddr := memory[programCounter+1]
 	rightAddr := memory[programCounter+2]
@@ -79,13 +79,13 @@ func (m multiplyOperation) Execute() error {
 	return nil
 }
 
-func (m multiplyOperation) GetNextProgramCounter() int { return m.machine.getProgramCounter() + 4 }
+func (m multiplyOperation) GetNextProgramCounter() int { return m.getProgramCounter() + 4 }
 
 func (_ multiplyOperation) Halt() bool { return false }
 
 // inputOperation multiplies two nubmers together
 type inputOperation struct {
-	machine *TsvetokVirtualMachine
+	*TsvetokVirtualMachine
 }
 
 func newInputOperation(t *TsvetokVirtualMachine) inputOperation {
@@ -93,21 +93,21 @@ func newInputOperation(t *TsvetokVirtualMachine) inputOperation {
 }
 
 func (m inputOperation) Execute() error {
-	memory := m.machine.getMemory()
-	number := m.machine.ReceiveInput()
-	address := memory[m.machine.getProgramCounter() + 1]
+	memory := m.getMemory()
+	number := m.ReceiveInput()
+	address := memory[m.getProgramCounter() + 1]
 	memory[address] = number
 
 	return nil
 }
 
-func (m inputOperation) GetNextProgramCounter() int { return m.machine.getProgramCounter() + 2 }
+func (m inputOperation) GetNextProgramCounter() int { return m.getProgramCounter() + 2 }
 
 func (_ inputOperation) Halt() bool { return false }
 
 // outputOperation multiplies two nubmers together
 type outputOperation struct {
-	machine *TsvetokVirtualMachine
+	*TsvetokVirtualMachine
 }
 
 func newOutputOperation(t *TsvetokVirtualMachine) outputOperation {
@@ -115,13 +115,13 @@ func newOutputOperation(t *TsvetokVirtualMachine) outputOperation {
 }
 
 func (m outputOperation) Execute() error {
-	memory := m.machine.getMemory()
-	address := memory[m.machine.getProgramCounter() + 1]
-	m.machine.EmitOutput(memory[address])
+	memory := m.getMemory()
+	address := memory[m.getProgramCounter() + 1]
+	m.EmitOutput(memory[address])
 
 	return nil
 }
 
-func (m outputOperation) GetNextProgramCounter() int { return m.machine.getProgramCounter() + 2 }
+func (m outputOperation) GetNextProgramCounter() int { return m.getProgramCounter() + 2 }
 
 func (_ outputOperation) Halt() bool { return false }
