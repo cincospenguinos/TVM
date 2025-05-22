@@ -37,6 +37,27 @@ func (a addOperation) Execute() error {
 	return nil
 }
 
+type multiplyOperation struct {
+	machine *TsvetokVirtualMachine
+}
+
+func newMultiplyOperation(t *TsvetokVirtualMachine) multiplyOperation {
+	return multiplyOperation{t}
+}
+
+func (m multiplyOperation) Execute() error {
+	memory := m.machine.getMemory()
+	programCounter := m.machine.getProgramCounter()
+
+	leftAddr := memory[programCounter + 1]
+	rightAddr := memory[programCounter + 2]
+	outAddr := memory[programCounter + 3]
+
+	memory[outAddr] = memory[leftAddr] * memory[rightAddr]
+
+	return nil
+}
+
 func NewTsvetokVirtualMachine(program []int) *TsvetokVirtualMachine {
 	return &TsvetokVirtualMachine{
 		memory: program,
@@ -59,21 +80,7 @@ func (t *TsvetokVirtualMachine) Execute() error {
 
 		currentOperation := t.memory[t.programCounter]
 
-		if currentOperation == 1 { // ADD
-			leftAddr := t.memory[t.programCounter + 1]
-			rightAddr := t.memory[t.programCounter + 2]
-			outAddr := t.memory[t.programCounter + 3]
-
-			t.memory[outAddr] = t.memory[leftAddr] + t.memory[rightAddr]
-			t.programCounter += 4
-		} else if currentOperation == 2 { // MULTIPLY
-			leftAddr := t.memory[t.programCounter + 1]
-			rightAddr := t.memory[t.programCounter + 2]
-			outAddr := t.memory[t.programCounter + 3]
-
-			t.memory[outAddr] = t.memory[leftAddr] * t.memory[rightAddr]
-			t.programCounter += 4
-		} else if currentOperation == 9 { // HALT
+		if currentOperation == 9 { // HALT
 			break
 		} else {
 			return fmt.Errorf(`no operation matches opcode "%v"`, currentOperation)
@@ -87,6 +94,10 @@ func (t *TsvetokVirtualMachine) getCurrentOperation() TsvetokVirtualMachineOpera
 	opCode := t.memory[t.programCounter]
 	if opCode == 1 {
 		return newAddOperation(t)
+	}
+
+	if opCode == 2 {
+		return newMultiplyOperation(t)
 	}
 
 	return nil
