@@ -7,10 +7,14 @@ type TVMOperation interface {
 	// Execute performs the underlying operation, writing to memory
 	Execute() error
 
-	// Returns true if this operation requires halting
+	// GetNextProgramCounter returns the program counter of the next operation after this one
+	GetNextProgramCounter() int
+
+	// Halt returns true if this operation requires halting
 	Halt() bool
 }
 
+// haltOperation does nothing and informs the machine that it is time to halt
 type haltOperation struct {
 	machine *TsvetokVirtualMachine
 }
@@ -19,11 +23,18 @@ func newHaltOperation(t *TsvetokVirtualMachine) haltOperation {
 	return haltOperation{t}
 }
 
-func (m haltOperation) Execute() error {
+func (_ haltOperation) Execute() error {
 	return nil
 }
 
-func (a haltOperation) Halt() bool { return true }
+func (h haltOperation) GetNextProgramCounter() int { return h.machine.getProgramCounter() }
+
+func (_ haltOperation) Halt() bool { return true }
+
+// addOperation adds two numbers together
+type addOperation struct {
+	machine *TsvetokVirtualMachine
+}
 
 func newAddOperation(t *TsvetokVirtualMachine) addOperation {
 	return addOperation{t}
@@ -42,8 +53,11 @@ func (a addOperation) Execute() error {
 	return nil
 }
 
-func (a addOperation) Halt() bool { return false }
+func (a addOperation) GetNextProgramCounter() int { return a.machine.getProgramCounter() + 4 }
 
+func (_ addOperation) Halt() bool { return false }
+
+// multiplyOperation multiplies two nubmers together
 type multiplyOperation struct {
 	machine *TsvetokVirtualMachine
 }
@@ -65,4 +79,6 @@ func (m multiplyOperation) Execute() error {
 	return nil
 }
 
-func (a multiplyOperation) Halt() bool { return false }
+func (m multiplyOperation) GetNextProgramCounter() int { return m.machine.getProgramCounter() + 4 }
+
+func (_ multiplyOperation) Halt() bool { return false }

@@ -9,10 +9,6 @@ type TsvetokVirtualMachine struct {
 	programCounter int
 }
 
-type addOperation struct {
-	machine *TsvetokVirtualMachine
-}
-
 func NewTsvetokVirtualMachine(program []int) *TsvetokVirtualMachine {
 	return &TsvetokVirtualMachine{
 		memory: program,
@@ -22,21 +18,21 @@ func NewTsvetokVirtualMachine(program []int) *TsvetokVirtualMachine {
 
 func (t *TsvetokVirtualMachine) Execute() error {
 	for {
-		currentOperationStruct := t.getCurrentOperation()
-		if currentOperationStruct == nil {
+		currentOperation := t.getCurrentOperation()
+		if currentOperation == nil {
 			return fmt.Errorf(`no operation found for opcode "%v"`, t.memory[t.programCounter])
 		}
 
-		err := currentOperationStruct.Execute()
+		err := currentOperation.Execute()
 		if err != nil {
 			return err
 		}
 
-		if currentOperationStruct.Halt() {
+		if currentOperation.Halt() {
 			break
 		}
 
-		t.programCounter += 4
+		t.programCounter = currentOperation.GetNextProgramCounter()
 	}
 
 	return nil
