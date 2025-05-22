@@ -7,16 +7,6 @@ For use in my TDD book. I realized I needed to write my own thing with my own vi
 
 A TVM reads a sequence of 32-bit integers, decodes them, and executes them.
 
-### Register File
-
-* Registers `$r0...$r4` are reserved between jumps
-* Registers `$t0...$t8` are not reserved between jumps
-* The last-jumped-address register, `$la`, is not reserved between jumps and so must be preserved between them
-
-### File Format
-
-TVM files are binary files with all bytes in little-endian. They begin with the ASCII characters `TVM` after which are sequences of instructions. Four bytes (32 bits) is one word in TVM, and so integers are received and munged in four byte chunks, until the footer `TVM EOF` is found.
-
 ### Operations
 
 * Add (opcode `1`)
@@ -28,6 +18,48 @@ TVM files are binary files with all bytes in little-endian. They begin with the 
 * Jump (opcode `7`)
 	* Jump always sets the return register
 * Halt (opcode `9`)
+
+### Register File
+
+* Registers `$r0...$r4` are reserved between jumps
+* Registers `$t0...$t8` are not reserved between jumps
+* The last-jumped-address register, `$la`, is not reserved between jumps and so must be preserved between them. This register also cannot be written to.
+
+The registers are enumerated as follows:
+
+```
+$r0...$r4 -> 0, 1, 2, 3, 4
+$t0...$t8 -> 5, 6, 7, 8, 9, 10, 11, 12
+$la       -> 13
+```
+
+### Operation Types
+
+The first digit indicates the first operand's type, the second the second, and so on for as many operands exist. There are three types:
+
+* Memory type, indicated by `0`
+* Immediate type, indicated by `1`
+* Register type, indicated by `2`
+
+Memory type means "this operand is an address in memory." Immediate type means "this operand is an integer value to be read as an integer value." Register type means "this operand's value refers to a register in the register file."
+
+### File Format
+
+TVM files are binary files with all bytes in little-endian. They begin with the ASCII characters `TVM` after which are sequences of instructions. Four bytes (32 bits) is one word in TVM, and so integers are received and munged in four byte chunks, until the footer `TVM EOF` is found.
+
+### TODO
+
+- [x] Halt instruction
+- [x] Add instruction
+- [x] Multiply instruction
+- [x] Input instruction
+- [x] Output instruction
+- [x] Sane defaults for Input/Output operations somewhere
+- [ ] All operations support address mode
+- [ ] All operations support immediate mode
+- [ ] All operations support register mode
+- [ ] Read a TVM binary file and execute it
+- [ ] Write to a TVM binary file
 
 ## TVA
 
