@@ -9,6 +9,34 @@ type TsvetokVirtualMachine struct {
 	programCounter int
 }
 
+// TsvetokVirtualMachineOperation represents any valid TVM operation
+type TsvetokVirtualMachineOperation interface {
+
+	// Execute performs the underlying operation, writing to memory
+	Execute() error
+}
+
+type addOperation struct {
+	machine *TsvetokVirtualMachine
+}
+
+func newAddOperation(t *TsvetokVirtualMachine) addOperation {
+	return addOperation{t}
+}
+
+func (a addOperation) Execute() error {
+	memory := a.machine.getMemory()
+	programCounter := a.machine.getProgramCounter()
+
+	leftAddr := memory[programCounter + 1]
+	rightAddr := memory[programCounter + 2]
+	outAddr := memory[programCounter + 3]
+
+	memory[outAddr] = memory[leftAddr] + memory[rightAddr]
+
+	return nil
+}
+
 func NewTsvetokVirtualMachine(program []int) *TsvetokVirtualMachine {
 	return &TsvetokVirtualMachine{
 		memory: program,
@@ -18,6 +46,17 @@ func NewTsvetokVirtualMachine(program []int) *TsvetokVirtualMachine {
 
 func (t *TsvetokVirtualMachine) Execute() error {
 	for {
+		if currentOperationStruct := t.getCurrentOperation(); currentOperationStruct != nil {
+			err := currentOperationStruct.Execute()
+			if err != nil {
+				return err
+			}
+
+			t.programCounter += 4
+
+			continue
+		}
+
 		currentOperation := t.memory[t.programCounter]
 
 		if currentOperation == 1 { // ADD
