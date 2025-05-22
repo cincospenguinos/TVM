@@ -11,9 +11,11 @@ type TsvetokVirtualMachine struct {
 
 // TsvetokVirtualMachineOperation represents any valid TVM operation
 type TsvetokVirtualMachineOperation interface {
-
 	// Execute performs the underlying operation, writing to memory
 	Execute() error
+
+	// Returns true if this operation requires halting
+	Halt() bool
 }
 
 type addOperation struct {
@@ -37,6 +39,8 @@ func (a addOperation) Execute() error {
 	return nil
 }
 
+func (a addOperation) Halt() bool { return false }
+
 type multiplyOperation struct {
 	machine *TsvetokVirtualMachine
 }
@@ -58,6 +62,22 @@ func (m multiplyOperation) Execute() error {
 	return nil
 }
 
+func (a multiplyOperation) Halt() bool { return false }
+
+type haltOperation struct {
+	machine *TsvetokVirtualMachine
+}
+
+func newHaltOperation(t *TsvetokVirtualMachine) haltOperation {
+	return haltOperation{t}
+}
+
+func (m haltOperation) Execute() error {
+	return nil
+}
+
+func (a haltOperation) Halt() bool { return true }
+
 func NewTsvetokVirtualMachine(program []int) *TsvetokVirtualMachine {
 	return &TsvetokVirtualMachine{
 		memory: program,
@@ -67,24 +87,21 @@ func NewTsvetokVirtualMachine(program []int) *TsvetokVirtualMachine {
 
 func (t *TsvetokVirtualMachine) Execute() error {
 	for {
-		if currentOperationStruct := t.getCurrentOperation(); currentOperationStruct != nil {
-			err := currentOperationStruct.Execute()
-			if err != nil {
-				return err
-			}
-
-			t.programCounter += 4
-
-			continue
+		currentOperationStruct := t.getCurrentOperation()
+		if currentOperationStruct == nil {
+			return fmt.Errorf(`no operation found for opcode "%v"`, t.memory[t.programCounter])
 		}
 
-		currentOperation := t.memory[t.programCounter]
+		err := currentOperationStruct.Execute()
+		if err != nil {
+			return err
+		}
 
-		if currentOperation == 9 { // HALT
+		if currentOperationStruct.Halt() {
 			break
-		} else {
-			return fmt.Errorf(`no operation matches opcode "%v"`, currentOperation)
 		}
+
+		t.programCounter += 4
 	}
 
 	return nil
@@ -98,6 +115,10 @@ func (t *TsvetokVirtualMachine) getCurrentOperation() TsvetokVirtualMachineOpera
 
 	if opCode == 2 {
 		return newMultiplyOperation(t)
+	}
+
+	if opCode == 9 {
+		return newHaltOperation(t)
 	}
 
 	return nil
