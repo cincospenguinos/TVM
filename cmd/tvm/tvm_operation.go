@@ -44,9 +44,9 @@ func (a addOperation) Execute() error {
 	memory := a.machine.getMemory()
 	programCounter := a.machine.getProgramCounter()
 
-	leftAddr := memory[programCounter + 1]
-	rightAddr := memory[programCounter + 2]
-	outAddr := memory[programCounter + 3]
+	leftAddr := memory[programCounter+1]
+	rightAddr := memory[programCounter+2]
+	outAddr := memory[programCounter+3]
 
 	memory[outAddr] = memory[leftAddr] + memory[rightAddr]
 
@@ -70,9 +70,9 @@ func (m multiplyOperation) Execute() error {
 	memory := m.machine.getMemory()
 	programCounter := m.machine.getProgramCounter()
 
-	leftAddr := memory[programCounter + 1]
-	rightAddr := memory[programCounter + 2]
-	outAddr := memory[programCounter + 3]
+	leftAddr := memory[programCounter+1]
+	rightAddr := memory[programCounter+2]
+	outAddr := memory[programCounter+3]
 
 	memory[outAddr] = memory[leftAddr] * memory[rightAddr]
 

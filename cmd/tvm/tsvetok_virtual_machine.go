@@ -4,14 +4,26 @@ import (
 	"fmt"
 )
 
+type InputInterface interface {
+	// ReceiveInput acquires and returns an integer from an external source
+	ReceiveInput() int
+}
+
+type OutputInterface interface {
+	// EmitOutput emits the integer provided to a given target
+	EmitOutput(int)
+}
+
 type TsvetokVirtualMachine struct {
-	memory []int
+	memory         []int
 	programCounter int
+	InputInterface
+	OutputInterface
 }
 
 func NewTsvetokVirtualMachine(program []int) *TsvetokVirtualMachine {
 	return &TsvetokVirtualMachine{
-		memory: program,
+		memory:         program,
 		programCounter: 0,
 	}
 }
