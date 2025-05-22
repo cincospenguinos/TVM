@@ -18,7 +18,7 @@ func TestTsvetokVirtualMachine_AddsProperlyInMemoryMode(t *testing.T) {
 	err := machine.Execute()
 	require.NoError(t, err)
 
-	result := machine.GetMemory()
+	result := machine.CopyMemory()
 	assert.Equal(t, 2, result[0])
 }
 
@@ -28,7 +28,7 @@ func TestTsvetokVirtualMachine_MultipliesProperlyInMemoryMode(t *testing.T) {
 	err := machine.Execute()
 	require.NoError(t, err)
 
-	result := machine.GetMemory()
+	result := machine.CopyMemory()
 	assert.Equal(t, 4, result[0])
 }
 
