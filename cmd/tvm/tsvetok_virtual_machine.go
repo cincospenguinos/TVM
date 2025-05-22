@@ -52,23 +52,20 @@ func (t *TsvetokVirtualMachine) Execute() error {
 
 func (t *TsvetokVirtualMachine) getCurrentOperation() TVMOperation {
 	opCode := t.memory[t.programCounter]
-	if opCode == 1 {
+	switch opCode {
+	case 1:
 		return newAddOperation(t)
-	}
-
-	if opCode == 2 {
+	case 2:
 		return newMultiplyOperation(t)
-	}
-
-	if opCode == 3 {
+	case 3:
 		return newInputOperation(t)
-	}
-
-	if opCode == 9 {
+	case 4:
+		return newOutputOperation(t)
+	case 9:
 		return newHaltOperation(t)
+	default:
+		return nil
 	}
-
-	return nil
 }
 
 // getMemory returns the TVM's underlying memory. Writing to this slice is persisted across
@@ -92,4 +89,8 @@ func (t *TsvetokVirtualMachine) CopyMemory() []int {
 
 func (t *TsvetokVirtualMachine) SetInputInterface(i InputInterface) {
 	t.InputInterface = i
+}
+
+func (t *TsvetokVirtualMachine) SetOutputInterface(o OutputInterface) {
+	t.OutputInterface = o
 }

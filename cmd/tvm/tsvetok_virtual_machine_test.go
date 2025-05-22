@@ -15,6 +15,14 @@ func (m MockInputInterface) ReceiveInput() int {
 	return m.NumberToReturn
 }
 
+type MockOutputInterface struct {
+	LastNumberReceived *int
+}
+
+func (m *MockOutputInterface) EmitOutput(number int) {
+	m.LastNumberReceived = &number
+}
+
 func TestTsvetokVirtualMachine_HaltsProperly(t *testing.T) {
 	err := NewTsvetokVirtualMachine([]int{9}).Execute()
 	require.NoError(t, err)
@@ -53,4 +61,14 @@ func TestTsvetokVirtualMachine_HandlesInputCorrectly(t *testing.T) {
 
 	result := machine.CopyMemory()
 	assert.Equal(t, -1, result[0])
+}
+
+func TestTsvetokVirtualMachine_HandlesOutputCorrectly(t *testing.T) {
+	mockOutput := &MockOutputInterface{}
+	machine := NewTsvetokVirtualMachine([]int{4, 0, 9})
+	machine.SetOutputInterface(mockOutput)
+
+	require.NoError(t, machine.Execute())
+	require.NotNil(t, mockOutput.LastNumberReceived)
+	assert.Equal(t, 4, *mockOutput.LastNumberReceived)
 }

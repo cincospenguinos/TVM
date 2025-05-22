@@ -104,3 +104,24 @@ func (m inputOperation) Execute() error {
 func (m inputOperation) GetNextProgramCounter() int { return m.machine.getProgramCounter() + 2 }
 
 func (_ inputOperation) Halt() bool { return false }
+
+// outputOperation multiplies two nubmers together
+type outputOperation struct {
+	machine *TsvetokVirtualMachine
+}
+
+func newOutputOperation(t *TsvetokVirtualMachine) outputOperation {
+	return outputOperation{t}
+}
+
+func (m outputOperation) Execute() error {
+	memory := m.machine.getMemory()
+	address := memory[m.machine.getProgramCounter() + 1]
+	m.machine.EmitOutput(memory[address])
+
+	return nil
+}
+
+func (m outputOperation) GetNextProgramCounter() int { return m.machine.getProgramCounter() + 2 }
+
+func (_ outputOperation) Halt() bool { return false }
