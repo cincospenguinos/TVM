@@ -95,7 +95,7 @@ func newInputOperation(t *TsvetokVirtualMachine) inputOperation {
 func (m inputOperation) Execute() error {
 	memory := m.getMemory()
 	number := m.ReceiveInput()
-	address := memory[m.getProgramCounter() + 1]
+	address := memory[m.getProgramCounter()+1]
 	memory[address] = number
 
 	return nil
@@ -116,7 +116,7 @@ func newOutputOperation(t *TsvetokVirtualMachine) outputOperation {
 
 func (m outputOperation) Execute() error {
 	memory := m.getMemory()
-	address := memory[m.getProgramCounter() + 1]
+	address := memory[m.getProgramCounter()+1]
 	m.EmitOutput(memory[address])
 
 	return nil
