@@ -21,3 +21,13 @@ func TestTsvetokVirtualMachine_AddsProperlyInMemoryMode(t *testing.T) {
 	result := machine.GetMemory()
 	assert.Equal(t, 2, result[0])
 }
+
+func TestTsvetokVirtualMachine_MultipliesProperlyInMemoryMode(t *testing.T) {
+	program := []int{2, 0, 0, 0, 9}
+	machine := NewTsvetokVirtualMachine(program)
+	err := machine.Execute()
+	require.NoError(t, err)
+
+	result := machine.GetMemory()
+	assert.Equal(t, 4, result[0])
+}

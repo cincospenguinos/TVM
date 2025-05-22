@@ -1,6 +1,8 @@
 package tvm
 
-import ()
+import (
+	"fmt"
+)
 
 type TsvetokVirtualMachine struct {
 	memory []int
@@ -25,8 +27,17 @@ func (t *TsvetokVirtualMachine) Execute() error {
 
 			t.memory[outAddr] = t.memory[leftAddr] + t.memory[rightAddr]
 			t.programCounter += 4
+		} else if currentOperation == 2 { // MULTIPLY
+			leftAddr := t.memory[t.programCounter + 1]
+			rightAddr := t.memory[t.programCounter + 2]
+			outAddr := t.memory[t.programCounter + 3]
+
+			t.memory[outAddr] = t.memory[leftAddr] * t.memory[rightAddr]
+			t.programCounter += 4
 		} else if currentOperation == 9 { // HALT
 			break
+		} else {
+			return fmt.Errorf(`no operation matches opcode "%v"`, currentOperation)
 		}
 	}
 
