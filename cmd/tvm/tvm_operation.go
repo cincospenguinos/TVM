@@ -82,3 +82,25 @@ func (m multiplyOperation) Execute() error {
 func (m multiplyOperation) GetNextProgramCounter() int { return m.machine.getProgramCounter() + 4 }
 
 func (_ multiplyOperation) Halt() bool { return false }
+
+// inputOperation multiplies two nubmers together
+type inputOperation struct {
+	machine *TsvetokVirtualMachine
+}
+
+func newInputOperation(t *TsvetokVirtualMachine) inputOperation {
+	return inputOperation{t}
+}
+
+func (m inputOperation) Execute() error {
+	memory := m.machine.getMemory()
+	number := m.machine.ReceiveInput()
+	address := memory[m.machine.getProgramCounter() + 1]
+	memory[address] = number
+
+	return nil
+}
+
+func (m inputOperation) GetNextProgramCounter() int { return m.machine.getProgramCounter() + 2 }
+
+func (_ inputOperation) Halt() bool { return false }

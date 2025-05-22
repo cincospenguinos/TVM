@@ -60,6 +60,10 @@ func (t *TsvetokVirtualMachine) getCurrentOperation() TVMOperation {
 		return newMultiplyOperation(t)
 	}
 
+	if opCode == 3 {
+		return newInputOperation(t)
+	}
+
 	if opCode == 9 {
 		return newHaltOperation(t)
 	}
@@ -84,4 +88,8 @@ func (t *TsvetokVirtualMachine) CopyMemory() []int {
 	copy(copiedMemory, t.memory)
 
 	return copiedMemory
+}
+
+func (t *TsvetokVirtualMachine) SetInputInterface(i InputInterface) {
+	t.InputInterface = i
 }
