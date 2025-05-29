@@ -122,6 +122,8 @@ func TestTsvetokVirtualMachine_AllInputParamsSupportImmediateMode(t *testing.T) 
 		{[]int{1102, 1, 0, 0, 9}, 0, 0,       "mlt both params immediate"},
 		{[]int{104, 100, 9}, -1, 100, "out one immediate parameter"},
 		{[]int{1105, 1105, 1105, 0, 9}, 0, 1, "seq first param immediate"},
+		{[]int{106, 1, 8, 0, 0, 0, 1, 9, 7}, 1, 1, "jit first param immediate"},
+		{[]int{1006, 1, 7, 0, 0, 0, 1, 9, 7}, 1, 1, "jit second param immediate"},
 	}
 
 	for _, tc := range testCases {

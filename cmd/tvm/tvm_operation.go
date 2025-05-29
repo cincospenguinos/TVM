@@ -191,11 +191,18 @@ func newJumpIfTrueOperation(t *TsvetokVirtualMachine) (*jumpIfTrueOperation) {
 }
 
 func (s *jumpIfTrueOperation) Execute() error {
-	memory := s.getMemory()
-	lookupAddr := memory[s.getProgramCounter() + 1]
-	if memory[lookupAddr] != 0 {
-		nextProgramCounterAddr := memory[s.getProgramCounter() + 2]
-		s.nextProgramCounter = memory[nextProgramCounterAddr]
+	firstParam, err := s.getFirstParam()
+	if err != nil {
+		return err
+	}
+
+	secondParam, err := s.getSecondParam()
+	if err != nil {
+		return err
+	}
+
+	if firstParam != 0 {
+		s.nextProgramCounter = secondParam
 		return nil
 	}
 
