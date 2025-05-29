@@ -186,7 +186,7 @@ type jumpIfTrueOperation struct {
 	nextProgramCounter int
 }
 
-func newJumpIfTrueOperation(t *TsvetokVirtualMachine) (*jumpIfTrueOperation) {
+func newJumpIfTrueOperation(t *TsvetokVirtualMachine) *jumpIfTrueOperation {
 	return &jumpIfTrueOperation{t, -1}
 }
 

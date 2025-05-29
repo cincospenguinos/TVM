@@ -111,15 +111,15 @@ func TestTsvetokVirtualMachine_JumpIfTrueDoesNotJumpIfFalse(t *testing.T) {
 
 func TestTsvetokVirtualMachine_AllInputParamsSupportImmediateMode(t *testing.T) {
 	type testCase struct {
-		program          []int
-		expectedAddress  int
-		expectedValue    int
-		testName         string
+		program         []int
+		expectedAddress int
+		expectedValue   int
+		testName        string
 	}
-	testCases := []testCase {
-		{[]int{101, 10, 2, 0, 9}, 0, 12,      "add first param immediate"},
-		{[]int{1001, 4, 10, 0, 9}, 0, 19,     "add second param immediate"},
-		{[]int{1102, 1, 0, 0, 9}, 0, 0,       "mlt both params immediate"},
+	testCases := []testCase{
+		{[]int{101, 10, 2, 0, 9}, 0, 12, "add first param immediate"},
+		{[]int{1001, 4, 10, 0, 9}, 0, 19, "add second param immediate"},
+		{[]int{1102, 1, 0, 0, 9}, 0, 0, "mlt both params immediate"},
 		{[]int{104, 100, 9}, -1, 100, "out one immediate parameter"},
 		{[]int{1105, 1105, 1105, 0, 9}, 0, 1, "seq first param immediate"},
 		{[]int{106, 1, 8, 0, 0, 0, 1, 9, 7}, 1, 1, "jit first param immediate"},
@@ -127,20 +127,19 @@ func TestTsvetokVirtualMachine_AllInputParamsSupportImmediateMode(t *testing.T) 
 	}
 
 	for _, tc := range testCases {
-		t.Run(tc.testName, func (t *testing.T) {
+		t.Run(tc.testName, func(t *testing.T) {
 			mockOutput := &MockOutputInterface{}
 			machine := NewTsvetokVirtualMachine(tc.program)
 			machine.SetOutputInterface(mockOutput)
 
 			require.NoError(t, machine.Execute())
 
-			if memory[0] % 10 == 4 { // We're testing output
+			memory := machine.CopyMemory()
+			if memory[0]%10 == 4 { // We're testing output
 				assert.Equal(t, tc.expectedValue, *mockOutput.LastNumberReceived)
 			} else {
-				memory := machine.CopyMemory()
 				assert.Equal(t, tc.expectedValue, memory[tc.expectedAddress])
 			}
-
 		})
 	}
 }

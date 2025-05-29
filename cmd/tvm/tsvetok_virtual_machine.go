@@ -98,11 +98,11 @@ func (t *TsvetokVirtualMachine) getFirstParam() (int, error) {
 	rawOpcode := t.memory[t.programCounter]
 	paramFormat := (rawOpcode / 100) % 10
 	if paramFormat == ParamFormatAddress {
-		return memory[memory[programCounter + 1]], nil
+		return memory[memory[programCounter+1]], nil
 	}
 
 	if paramFormat == ParamFormatImmediate {
-		return memory[programCounter + 1], nil
+		return memory[programCounter+1], nil
 	}
 
 	return 0, fmt.Errorf("unknown parameter format '%v'", paramFormat)
@@ -115,11 +115,11 @@ func (t *TsvetokVirtualMachine) getSecondParam() (int, error) {
 	rawOpcode := t.memory[t.programCounter]
 	paramFormat := rawOpcode / 1000
 	if paramFormat == ParamFormatAddress {
-		return memory[memory[programCounter + 2]], nil
+		return memory[memory[programCounter+2]], nil
 	}
 
 	if paramFormat == ParamFormatImmediate {
-		return memory[programCounter + 2], nil
+		return memory[programCounter+2], nil
 	}
 
 	return 0, fmt.Errorf("unknown parameter format '%v'", paramFormat)
