@@ -90,3 +90,21 @@ func TestTsvetokVirtualMachine_SetIfEqualDoesNotSetIfNotEqualInMemoryMode(t *tes
 	result := machine.CopyMemory()
 	assert.Equal(t, 5, result[0])
 }
+
+func TestTsvetokVirtualMachine_JumpIfTrueDoesItsNamesake(t *testing.T) {
+	program := []int{6, 0, 8, 1, 0, 0, 0, 9, 7}
+	machine := NewTsvetokVirtualMachine(program)
+	require.NoError(t, machine.Execute())
+
+	result := machine.CopyMemory()
+	assert.Equal(t, 6, result[0])
+}
+
+func TestTsvetokVirtualMachine_JumpIfTrueDoesNotJumpIfFalse(t *testing.T) {
+	program := []int{6, 4, 8, 1, 0, 0, 0, 9, 7}
+	machine := NewTsvetokVirtualMachine(program)
+	require.NoError(t, machine.Execute())
+
+	result := machine.CopyMemory()
+	assert.Equal(t, 12, result[0])
+}

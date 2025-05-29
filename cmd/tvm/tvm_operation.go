@@ -126,15 +126,15 @@ func (m outputOperation) GetNextProgramCounter() int { return m.getProgramCounte
 
 func (_ outputOperation) Halt() bool { return false }
 
-type setIfEqual struct {
+type setIfEqualOperation struct {
 	*TsvetokVirtualMachine
 }
 
-func newSetIfEqualOperation(t *TsvetokVirtualMachine) setIfEqual {
-	return setIfEqual{t}
+func newSetIfEqualOperation(t *TsvetokVirtualMachine) setIfEqualOperation {
+	return setIfEqualOperation{t}
 }
 
-func (s setIfEqual) Execute() error {
+func (s setIfEqualOperation) Execute() error {
 	memory := s.getMemory()
 	leftAddr := memory[s.getProgramCounter()+1]
 	rightAddr := memory[s.getProgramCounter()+2]
@@ -147,6 +147,33 @@ func (s setIfEqual) Execute() error {
 	return nil
 }
 
-func (s setIfEqual) GetNextProgramCounter() int { return s.getProgramCounter() + 4 }
+func (s setIfEqualOperation) GetNextProgramCounter() int { return s.getProgramCounter() + 4 }
 
-func (s setIfEqual) Halt() bool { return false }
+func (s setIfEqualOperation) Halt() bool { return false }
+
+type jumpIfTrueOperation struct {
+	*TsvetokVirtualMachine
+	nextProgramCounter int
+}
+
+func newJumpIfTrueOperation(t *TsvetokVirtualMachine) (*jumpIfTrueOperation) {
+	return &jumpIfTrueOperation{t, -1}
+}
+
+func (s *jumpIfTrueOperation) Execute() error {
+	memory := s.getMemory()
+	lookupAddr := memory[s.getProgramCounter() + 1]
+	if memory[lookupAddr] != 0 {
+		nextProgramCounterAddr := memory[s.getProgramCounter() + 2]
+		s.nextProgramCounter = memory[nextProgramCounterAddr]
+		return nil
+	}
+
+	s.nextProgramCounter = s.getProgramCounter() + 3
+
+	return nil
+}
+
+func (s *jumpIfTrueOperation) GetNextProgramCounter() int { return s.nextProgramCounter }
+
+func (s *jumpIfTrueOperation) Halt() bool { return false }
