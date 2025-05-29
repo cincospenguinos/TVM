@@ -82,13 +82,13 @@ func TestTsvetokVirtualMachine_SetIfEqualSetsIfEqualInMemoryMode(t *testing.T) {
 	assert.Equal(t, 1, result[0])
 }
 
-func TestTsvetokVirtualMachine_SetIfEqualDoesNotSetIfNotEqualInMemoryMode(t *testing.T) {
+func TestTsvetokVirtualMachine_SetIfEqualSetsToFalseIfNotEqualInMemoryMode(t *testing.T) {
 	program := []int{5, 0, 1, 0, 9}
 	machine := NewTsvetokVirtualMachine(program)
 	require.NoError(t, machine.Execute())
 
 	result := machine.CopyMemory()
-	assert.Equal(t, 5, result[0])
+	assert.Equal(t, 0, result[0])
 }
 
 func TestTsvetokVirtualMachine_JumpIfTrueDoesItsNamesake(t *testing.T) {
@@ -107,4 +107,26 @@ func TestTsvetokVirtualMachine_JumpIfTrueDoesNotJumpIfFalse(t *testing.T) {
 
 	result := machine.CopyMemory()
 	assert.Equal(t, 12, result[0])
+}
+
+func TestTsvetokVirtualMachine_AllInputParamsSupportImmediateMode(t *testing.T) {
+	type testCase struct {
+		program          []int
+		expectedAddress  int
+		expectedValue    int
+		testName         string
+	}
+	testCases := []testCase {
+		{[]int{101, 10, 2, 0, 9}, 0, 12, "add first param immediate"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.testName, func (t *testing.T) {
+			machine := NewTsvetokVirtualMachine(tc.program)
+			require.NoError(t, machine.Execute())
+
+			memory := machine.CopyMemory()
+			assert.Equal(t, tc.expectedValue, memory[tc.expectedAddress])
+		})
+	}
 }

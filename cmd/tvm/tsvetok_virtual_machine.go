@@ -51,7 +51,9 @@ func (t *TsvetokVirtualMachine) Execute() error {
 }
 
 func (t *TsvetokVirtualMachine) getCurrentOperation() TVMOperation {
-	opCode := t.memory[t.programCounter]
+	rawOpcode := t.memory[t.programCounter]
+	opCode := rawOpcode % 100
+
 	switch opCode {
 	case 1:
 		return newAddOperation(t)
@@ -75,7 +77,19 @@ func (t *TsvetokVirtualMachine) getCurrentOperation() TVMOperation {
 // getMemory returns the TVM's underlying memory. Writing to this slice is persisted across
 // the lifetime of the struct.
 func (t *TsvetokVirtualMachine) getMemory() []int {
+	// TODO: No more direct memory management. We need to guard against attempting to read at invalid places
 	return t.memory
+}
+
+const (
+	ParamFormatAddress   = 0
+	ParamFormatImmediate = 1
+)
+
+func (t *TsvetokVirtualMachine) firstParamFormat() int {
+	rawOpcode := t.memory[t.programCounter]
+	firstParamFormat := rawOpcode / 100
+	return firstParamFormat
 }
 
 func (t *TsvetokVirtualMachine) getProgramCounter() int {
