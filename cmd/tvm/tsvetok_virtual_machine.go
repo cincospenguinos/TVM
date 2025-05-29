@@ -91,6 +91,23 @@ const (
 	ParamFormatImmediate = 1
 )
 
+func (t *TsvetokVirtualMachine) getFirstParam() (int, error) {
+	memory := t.getMemory()
+	programCounter := t.getProgramCounter()
+
+	rawOpcode := t.memory[t.programCounter]
+	firstParamFormat := (rawOpcode / 100) % 10
+	if firstParamFormat == ParamFormatAddress {
+		return memory[memory[programCounter + 1]], nil
+	}
+
+	if firstParamFormat == ParamFormatImmediate {
+		return memory[programCounter + 1], nil
+	}
+
+	return 0, fmt.Errorf("unknown memory format '%v'", firstParamFormat)
+}
+
 func (t *TsvetokVirtualMachine) firstParamFormat() int {
 	rawOpcode := t.memory[t.programCounter]
 	firstParamFormat := (rawOpcode / 100) % 10

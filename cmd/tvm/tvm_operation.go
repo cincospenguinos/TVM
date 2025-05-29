@@ -54,14 +54,9 @@ func (a addOperation) Execute() error {
 	memory := a.getMemory()
 	programCounter := a.getProgramCounter()
 
-	var leftValue int
-	leftAddr := memory[programCounter+1]
-	if a.firstParamFormat() == ParamFormatAddress {
-		leftValue = memory[leftAddr]
-	} else if a.firstParamFormat() == ParamFormatImmediate {
-		leftValue = leftAddr
-	} else {
-		return TVMExecutionError{fmt.Sprintf("unknown parameter format '%v'", a.firstParamFormat())}
+	leftParam, err := a.getFirstParam()
+	if err != nil {
+		return err
 	}
 
 	var rightValue int
@@ -76,7 +71,7 @@ func (a addOperation) Execute() error {
 
 	outAddr := memory[programCounter+3]
 
-	memory[outAddr] = leftValue + rightValue
+	memory[outAddr] = leftParam + rightValue
 
 	return nil
 }
