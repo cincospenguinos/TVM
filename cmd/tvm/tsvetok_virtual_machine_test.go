@@ -118,6 +118,7 @@ func TestTsvetokVirtualMachine_AllInputParamsSupportImmediateMode(t *testing.T) 
 	}
 	testCases := []testCase {
 		{[]int{101, 10, 2, 0, 9}, 0, 12, "add first param immediate"},
+		{[]int{1001, 4, 10, 0, 9}, 0, 19, "add second param immediate"},
 	}
 
 	for _, tc := range testCases {

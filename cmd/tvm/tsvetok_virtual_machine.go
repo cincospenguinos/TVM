@@ -4,16 +4,21 @@ import (
 	"fmt"
 )
 
+// InputInterface represents any external service or program that can be called upon for
+// an integer
 type InputInterface interface {
 	// ReceiveInput acquires and returns an integer from an external source
 	ReceiveInput() int
 }
 
+// OutputInterface represents any external service or program that an integer can be
+// emitted
 type OutputInterface interface {
 	// EmitOutput emits the integer provided to a given target
 	EmitOutput(int)
 }
 
+// TsvetokVirtualMachine is an implementation of the Tsvetok Virtual Machine Intcode machine (or TVM.)
 type TsvetokVirtualMachine struct {
 	memory         []int
 	programCounter int
@@ -88,8 +93,16 @@ const (
 
 func (t *TsvetokVirtualMachine) firstParamFormat() int {
 	rawOpcode := t.memory[t.programCounter]
-	firstParamFormat := rawOpcode / 100
+	firstParamFormat := (rawOpcode / 100) % 10
+
 	return firstParamFormat
+}
+
+func (t *TsvetokVirtualMachine) secondParamFormat() int {
+	rawOpcode := t.memory[t.programCounter]
+	secondParamFormat := rawOpcode / 1000
+
+	return secondParamFormat
 }
 
 func (t *TsvetokVirtualMachine) getProgramCounter() int {

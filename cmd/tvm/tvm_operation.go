@@ -64,10 +64,19 @@ func (a addOperation) Execute() error {
 		return TVMExecutionError{fmt.Sprintf("unknown parameter format '%v'", a.firstParamFormat())}
 	}
 
+	var rightValue int
 	rightAddr := memory[programCounter+2]
+	if a.secondParamFormat() == ParamFormatAddress {
+		rightValue = memory[rightAddr]
+	} else if a.secondParamFormat() == ParamFormatImmediate {
+		rightValue = rightAddr
+	} else {
+		return TVMExecutionError{fmt.Sprintf("unknown parameter format '%v'", a.secondParamFormat())}
+	}
+
 	outAddr := memory[programCounter+3]
 
-	memory[outAddr] = leftValue + memory[rightAddr]
+	memory[outAddr] = leftValue + rightValue
 
 	return nil
 }
