@@ -61,6 +61,8 @@ func (t *TsvetokVirtualMachine) getCurrentOperation() TVMOperation {
 		return newInputOperation(t)
 	case 4:
 		return newOutputOperation(t)
+	case 5:
+		return newSetIfEqualOperation(t)
 	case 9:
 		return newHaltOperation(t)
 	default:

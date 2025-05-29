@@ -4,7 +4,7 @@ import ()
 
 // TVMOperation represents any valid TVM operation
 type TVMOperation interface {
-	// Execute performs the underlying operation, writing to memory
+	// Execute performs the underlying operation. The operation may write back to memory
 	Execute() error
 
 	// GetNextProgramCounter returns the program counter of the next operation after this one
@@ -125,3 +125,28 @@ func (m outputOperation) Execute() error {
 func (m outputOperation) GetNextProgramCounter() int { return m.getProgramCounter() + 2 }
 
 func (_ outputOperation) Halt() bool { return false }
+
+type setIfEqual struct {
+	*TsvetokVirtualMachine
+}
+
+func newSetIfEqualOperation(t *TsvetokVirtualMachine) setIfEqual {
+	return setIfEqual{t}
+}
+
+func (s setIfEqual) Execute() error {
+	memory := s.getMemory()
+	leftAddr := memory[s.getProgramCounter()+1]
+	rightAddr := memory[s.getProgramCounter()+2]
+	outputAddr := memory[s.getProgramCounter()+3]
+
+	if memory[leftAddr] == memory[rightAddr] {
+		memory[outputAddr] = 1
+	}
+
+	return nil
+}
+
+func (s setIfEqual) GetNextProgramCounter() int { return s.getProgramCounter() + 4 }
+
+func (s setIfEqual) Halt() bool { return false }

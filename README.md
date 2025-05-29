@@ -14,9 +14,10 @@ A TVM reads a sequence of 32-bit integers, decodes them, and executes them.
 * Input (opcode `3`)
 * Output (opcode `4`)
 * Set-if-equal (opcode `5`)
-* Set-if-not-equal (opcode `6`)
-* Jump (opcode `7`)
-	* Jump always sets the return register
+* UNUSED
+* Jump if true (opcode `7`)
+	* Jump always sets the return register if it takes the jump
+* UNUSED
 * Halt (opcode `9`)
 
 ### Register File

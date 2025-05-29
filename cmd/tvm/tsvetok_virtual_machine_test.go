@@ -72,3 +72,21 @@ func TestTsvetokVirtualMachine_HandlesOutputCorrectly(t *testing.T) {
 	require.NotNil(t, mockOutput.LastNumberReceived)
 	assert.Equal(t, 4, *mockOutput.LastNumberReceived)
 }
+
+func TestTsvetokVirtualMachine_SetIfEqualSetsIfEqualInMemoryMode(t *testing.T) {
+	program := []int{5, 0, 0, 0, 9}
+	machine := NewTsvetokVirtualMachine(program)
+	require.NoError(t, machine.Execute())
+
+	result := machine.CopyMemory()
+	assert.Equal(t, 1, result[0])
+}
+
+func TestTsvetokVirtualMachine_SetIfEqualDoesNotSetIfNotEqualInMemoryMode(t *testing.T) {
+	program := []int{5, 0, 1, 0, 9}
+	machine := NewTsvetokVirtualMachine(program)
+	require.NoError(t, machine.Execute())
+
+	result := machine.CopyMemory()
+	assert.Equal(t, 5, result[0])
+}
