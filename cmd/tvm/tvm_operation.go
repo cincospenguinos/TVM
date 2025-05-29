@@ -1,16 +1,6 @@
 package tvm
 
-import (
-	"fmt"
-)
-
-type TVMExecutionError struct {
-	Message string
-}
-
-func (e TVMExecutionError) Error() string {
-	return e.Message
-}
+import ()
 
 // TVMOperation represents any valid TVM operation
 type TVMOperation interface {
@@ -59,19 +49,14 @@ func (a addOperation) Execute() error {
 		return err
 	}
 
-	var rightValue int
-	rightAddr := memory[programCounter+2]
-	if a.secondParamFormat() == ParamFormatAddress {
-		rightValue = memory[rightAddr]
-	} else if a.secondParamFormat() == ParamFormatImmediate {
-		rightValue = rightAddr
-	} else {
-		return TVMExecutionError{fmt.Sprintf("unknown parameter format '%v'", a.secondParamFormat())}
+	rightParam, err := a.getSecondParam()
+	if err != nil {
+		return err
 	}
 
 	outAddr := memory[programCounter+3]
 
-	memory[outAddr] = leftParam + rightValue
+	memory[outAddr] = leftParam + rightParam
 
 	return nil
 }
