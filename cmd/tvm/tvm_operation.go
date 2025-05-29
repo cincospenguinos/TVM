@@ -78,11 +78,19 @@ func (m multiplyOperation) Execute() error {
 	memory := m.getMemory()
 	programCounter := m.getProgramCounter()
 
-	leftAddr := memory[programCounter+1]
-	rightAddr := memory[programCounter+2]
+	leftParam, err := m.getFirstParam()
+	if err != nil {
+		return err
+	}
+
+	rightParam, err := m.getSecondParam()
+	if err != nil {
+		return err
+	}
+
 	outAddr := memory[programCounter+3]
 
-	memory[outAddr] = memory[leftAddr] * memory[rightAddr]
+	memory[outAddr] = leftParam * rightParam
 
 	return nil
 }
@@ -123,9 +131,12 @@ func newOutputOperation(t *TsvetokVirtualMachine) outputOperation {
 }
 
 func (m outputOperation) Execute() error {
-	memory := m.getMemory()
-	address := memory[m.getProgramCounter()+1]
-	m.EmitOutput(memory[address])
+	param, err := m.getFirstParam()
+	if err != nil {
+		return err
+	}
+
+	m.EmitOutput(param)
 
 	return nil
 }
@@ -144,11 +155,20 @@ func newSetIfEqualOperation(t *TsvetokVirtualMachine) setIfEqualOperation {
 
 func (s setIfEqualOperation) Execute() error {
 	memory := s.getMemory()
-	leftAddr := memory[s.getProgramCounter()+1]
-	rightAddr := memory[s.getProgramCounter()+2]
+
+	leftParam, err := s.getFirstParam()
+	if err != nil {
+		return err
+	}
+
+	rightParam, err := s.getSecondParam()
+	if err != nil {
+		return err
+	}
+
 	outputAddr := memory[s.getProgramCounter()+3]
 
-	if memory[leftAddr] == memory[rightAddr] {
+	if leftParam == rightParam {
 		memory[outputAddr] = 1
 	} else {
 		memory[outputAddr] = 0
