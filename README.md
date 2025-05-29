@@ -56,9 +56,11 @@ TVM files are binary files with all bytes in little-endian. They begin with the 
 - [x] Input instruction
 - [x] Output instruction
 - [x] Sane defaults for Input/Output operations somewhere
-- [ ] All operations support address mode
+- [x] All operations support address mode
 - [ ] All operations support immediate mode
 - [ ] All operations support register mode
+- [ ] Any memory address that does not exist will immediately exist upon lookup or writing
+	* If we expand memory to fill the space, we set everything inside to 0
 - [ ] Read a TVM binary file and execute it
 - [ ] Write to a TVM binary file
 
@@ -72,7 +74,21 @@ Tsvetok assembly files are plain text UTF-8 files and have the following feature
 
 ### TODO
 
-* I think we need an object file type: something that is partially constructed with the exception of the `call` commands that the final assembly step picks up and loads all together.
+- [ ] `hlt` is supported
+- [ ] `add` is supported
+- [ ] `mlt` is supported
+- [ ] `in` is supported
+- [ ] `out` is supported
+- [ ] `seq` is supported
+- [ ] `jit` is supported
+- [ ] Labels for jumping are supported
+- [ ] Labels for data preservation are supported
+- [ ] All operations support immediates
+- [ ] All operations support registers
+- [ ] `jif` pseudo-instruction is supported
+- [ ] `sub` pseudo-instruction is supported
+- [ ] `not` psuedo-instruction is supported
+	* This sets the underlying value to simply 0 unconditionally
 
 ## Tsvetalk
 
