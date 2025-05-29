@@ -134,11 +134,10 @@ func TestTsvetokVirtualMachine_AllInputParamsSupportImmediateMode(t *testing.T) 
 
 			require.NoError(t, machine.Execute())
 
-			memory := machine.CopyMemory()
-
 			if memory[0] % 10 == 4 { // We're testing output
 				assert.Equal(t, tc.expectedValue, *mockOutput.LastNumberReceived)
 			} else {
+				memory := machine.CopyMemory()
 				assert.Equal(t, tc.expectedValue, memory[tc.expectedAddress])
 			}
 
