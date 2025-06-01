@@ -143,3 +143,22 @@ func TestTsvetokVirtualMachine_AllInputParamsSupportImmediateMode(t *testing.T) 
 		})
 	}
 }
+
+func TestTsvetokVirtualMachine_NoOutputParamSupportsImmediateMode(t *testing.T) {
+	type testCase struct {
+		program         []int
+		testName        string
+	}
+
+	testCases := []testCase{
+		{[]int{10001, 0, 0, 12, 9}, "add output param immediate"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.testName, func(t *testing.T) {
+			machine := NewTsvetokVirtualMachine(tc.program)
+			err := machine.Execute()
+			require.Error(t, err)
+		})
+	}
+}

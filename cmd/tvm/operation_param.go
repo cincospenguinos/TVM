@@ -20,22 +20,37 @@ const (
 // is currently understood by what exists in memory. Constituent operations will be required to make
 // their own decisions further down
 type operationParam struct {
+	// Format is the parameter's given format (i.e. Address, Immediate, etc.)
 	Format  int
+
+	// Address is the integer found in memory at the parameter's location. For example: if this parameter is the
+	// first parameter, then the Address is the value in memory found at the memory entry one past the current
+	// program counter
+	Address int
+
+	// Value is the integer found in memory at the parameter's Address (see above.) This integer is equal to
+	// address if the parameter is in immediate mode
 	Value   int
 }
 
 func newOperationParam(t *TsvetokVirtualMachine, paramFormat, paramAddress int) (operationParam, error) {
-	if paramFormat > ParamFormatImmediate || paramFormat < ParamFormatAddress {
+	if paramFormat != ParamFormatImmediate && paramFormat != ParamFormatAddress {
 		return operationParam{}, fmt.Errorf("unknown parameter format '%v' at address '%v'", paramFormat, paramAddress)
 	}
 
-	memory := t.getMemory()
-	immediate := memory[paramAddress]
-	if paramFormat == ParamFormatImmediate {
-		return operationParam{paramFormat, immediate}, nil
+	immediate, err := t.GetValueInMemory(paramAddress)
+	if err != nil {
+		return operationParam{}, err
 	}
 
-	// ParamFormatAddress means we want the value in memory---that is, our immediate value is actually
-	// an address
-	return operationParam{paramFormat, memory[immediate]}, nil
+	if paramFormat == ParamFormatImmediate {
+		return operationParam{paramFormat, immediate, immediate}, nil
+	}
+
+	value, err := t.GetValueInMemory(immediate)
+	if err != nil {
+		return operationParam{}, err
+	}
+
+	return operationParam{paramFormat, immediate, value}, nil
 }

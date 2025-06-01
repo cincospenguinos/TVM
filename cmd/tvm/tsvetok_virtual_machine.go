@@ -82,8 +82,15 @@ func (t *TsvetokVirtualMachine) getCurrentOperation() TVMOperation {
 // getMemory returns the TVM's underlying memory. Writing to this slice is persisted across
 // the lifetime of the struct.
 func (t *TsvetokVirtualMachine) getMemory() []int {
-	// TODO: No more direct memory management. We need to guard against attempting to read at invalid places
 	return t.memory
+}
+
+func (t *TsvetokVirtualMachine) GetValueInMemory(address int) (int, error) {
+	if address >= 0 && address < len(t.memory) {
+		return t.memory[address], nil
+	}
+
+	return -1, fmt.Errorf("cannot lookup memory at address '%v' (memory is of size '%v')", address, len(t.memory))
 }
 
 func (t *TsvetokVirtualMachine) getFirstParam() (operationParam, error) {
