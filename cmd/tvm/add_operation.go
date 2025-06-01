@@ -1,8 +1,6 @@
 package tvm
 
-import (
-	"fmt"
-)
+import ()
 
 // addOperation adds two numbers together
 type addOperation struct {
@@ -32,7 +30,7 @@ func (a addOperation) Execute() error {
 	}
 
 	if outAddr.Format != ParamFormatAddress {
-		return fmt.Errorf("output parameter for add is not in address format")
+		return InvalidOutputParamErr{"add"}
 	}
 
 	memory[outAddr.Address] = leftParam.Value + rightParam.Value

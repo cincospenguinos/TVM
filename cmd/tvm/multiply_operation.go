@@ -1,8 +1,6 @@
 package tvm
 
-import (
-	"fmt"
-)
+import ()
 
 // multiplyOperation multiplies two nubmers together
 type multiplyOperation struct {
@@ -32,7 +30,7 @@ func (m multiplyOperation) Execute() error {
 	}
 
 	if outAddr.Format != ParamFormatAddress {
-		return fmt.Errorf("output parameter for mlt is not in address format")
+		return InvalidOutputParamErr{"mlt"}
 	}
 
 	memory[outAddr.Address] = leftParam.Value * rightParam.Value
