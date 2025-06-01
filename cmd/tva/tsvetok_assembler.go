@@ -21,6 +21,23 @@ type instructionBuilder struct {
 	Params []int
 }
 
+func (i *instructionBuilder) addParam(paramStr string, paramIndex int) error {
+	paramStr = strings.ReplaceAll(paramStr, ",", "")
+	if strings.Contains(paramStr, "$") {
+		paramStr = strings.ReplaceAll(paramStr, "$", "")
+	}
+
+	paramVal, err := strconv.Atoi(paramStr)
+	if err != nil {
+		return err
+	}
+
+	// TODO: Do we need to respect the index? Like do an insert?
+	i.Params = append(i.Params, paramVal)
+
+	return nil
+}
+
 func (i *instructionBuilder) toIntcode() []int {
 	intcode := []int{i.OpCode}
 
@@ -52,15 +69,11 @@ func (a *TsvetokAssembler) Assemble() ([]int, error) {
 			return []int{}, fmt.Errorf("unknown instruction '%v' on line %v", line, lineNumber)
 		}
 
-		for _, paramStr := range params {
-			numStr := strings.ReplaceAll(paramStr, "$", "")
-			numStr = strings.ReplaceAll(numStr, ",", "")
-			num, err := strconv.Atoi(numStr)
+		for index, paramStr := range params {
+			err := builder.addParam(paramStr, index)
 			if err != nil {
 				return []int{}, err
 			}
-
-			builder.Params = append(builder.Params, num)
 		}
 
 		assembledProgram = append(assembledProgram, builder.toIntcode()...)

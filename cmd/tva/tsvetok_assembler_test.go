@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestTsvetokAssembler_HandlesAllRegularInstructions(t *testing.T) {
+func TestTsvetokAssembler_HandlesAllRegularInstructionsInMemoryMode(t *testing.T) {
 	type testCase struct {
 		program         string
 		expectedAddress int
