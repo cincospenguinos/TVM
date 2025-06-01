@@ -1,4 +1,4 @@
-package tvm
+package virtual_machine
 
 import (
 	"fmt"

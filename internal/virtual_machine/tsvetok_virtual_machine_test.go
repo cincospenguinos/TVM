@@ -1,4 +1,4 @@
-package tvm
+package virtual_machine
 
 import (
 	"testing"
@@ -168,3 +168,4 @@ func TestTsvetokVirtualMachine_NoOutputParamSupportsImmediateMode(t *testing.T) 
 		})
 	}
 }
+
