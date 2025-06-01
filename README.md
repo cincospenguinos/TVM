@@ -73,8 +73,8 @@ Tsvetok assembly files are plain text UTF-8 files and have the following feature
 
 ### TODO
 
-- [ ] `hlt` is supported
-- [ ] `add` is supported
+- [x] `hlt` is supported
+- [x] `add` is supported
 - [ ] `mlt` is supported
 - [ ] `in` is supported
 - [ ] `out` is supported
@@ -86,8 +86,9 @@ Tsvetok assembly files are plain text UTF-8 files and have the following feature
 - [ ] All operations support registers
 - [ ] `jif` pseudo-instruction is supported
 - [ ] `sub` pseudo-instruction is supported
-- [ ] `not` psuedo-instruction is supported
+- [ ] `nil` psuedo-instruction is supported
 	* This sets the underlying value to simply 0 unconditionally
+- [ ] Comments are removed and ignored
 
 ## Tsvetalk
 
@@ -95,4 +96,4 @@ A higher level language with a grammar we compile down to TVA and the TVM format
 
 ### TODO
 
-* What is the grammar for this? I'm thinking some combination of Mini Java, Ruby, and Lox. I think the only primitive type should be an integer, and everything else is in its standard library. I think we should do a multi-pass compiler thing so we don't have to do header/source file splits (although I do really like that about C.)
+* What is the grammar for this? I'm thinking some combination of Mini Java, Ruby, and Lox. I think the only primitive type should be an integer, and everything else is in its standard library. I think we should do a copypasta import kind of thing, but maybe with a multi-pass compiler (I like `#include` directives, personally)
