@@ -31,28 +31,6 @@ func (h haltOperation) GetNextProgramCounter() int { return h.getProgramCounter(
 
 func (_ haltOperation) Halt() bool { return true }
 
-// inputOperation multiplies two nubmers together
-type inputOperation struct {
-	*TsvetokVirtualMachine
-}
-
-func newInputOperation(t *TsvetokVirtualMachine) inputOperation {
-	return inputOperation{t}
-}
-
-func (m inputOperation) Execute() error {
-	memory := m.getMemory()
-	number := m.ReceiveInput()
-	address := memory[m.getProgramCounter()+1]
-	memory[address] = number
-
-	return nil
-}
-
-func (m inputOperation) GetNextProgramCounter() int { return m.getProgramCounter() + 2 }
-
-func (_ inputOperation) Halt() bool { return false }
-
 // outputOperation multiplies two nubmers together
 type outputOperation struct {
 	*TsvetokVirtualMachine

@@ -153,6 +153,7 @@ func TestTsvetokVirtualMachine_NoOutputParamSupportsImmediateMode(t *testing.T) 
 	testCases := []testCase{
 		{[]int{10001, 0, 0, 12, 9}, "add output param immediate"},
 		{[]int{10002, 0, 0, -69, 9}, "mlt output param immediate"},
+		{[]int{10003, -1, 9}, "in output param immediate"},
 	}
 
 	for _, tc := range testCases {
