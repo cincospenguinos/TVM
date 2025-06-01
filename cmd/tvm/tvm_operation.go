@@ -56,7 +56,7 @@ func (m multiplyOperation) Execute() error {
 
 	outAddr := memory[programCounter+3]
 
-	memory[outAddr] = leftParam.Value * rightParam
+	memory[outAddr] = leftParam.Value * rightParam.Value
 
 	return nil
 }
@@ -134,7 +134,7 @@ func (s setIfEqualOperation) Execute() error {
 
 	outputAddr := memory[s.getProgramCounter()+3]
 
-	if leftParam.Value == rightParam {
+	if leftParam.Value == rightParam.Value {
 		memory[outputAddr] = 1
 	} else {
 		memory[outputAddr] = 0
@@ -168,7 +168,7 @@ func (s *jumpIfTrueOperation) Execute() error {
 	}
 
 	if firstParam.Value != 0 {
-		s.nextProgramCounter = secondParam
+		s.nextProgramCounter = secondParam.Value
 		return nil
 	}
 

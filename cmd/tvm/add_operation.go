@@ -27,7 +27,7 @@ func (a addOperation) Execute() error {
 
 	outAddr := memory[programCounter+3]
 
-	memory[outAddr] = leftParam.Value + rightParam
+	memory[outAddr] = leftParam.Value + rightParam.Value
 
 	return nil
 }
