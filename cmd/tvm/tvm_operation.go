@@ -31,43 +31,6 @@ func (h haltOperation) GetNextProgramCounter() int { return h.getProgramCounter(
 
 func (_ haltOperation) Halt() bool { return true }
 
-// setIfEqualOperation
-type setIfEqualOperation struct {
-	*TsvetokVirtualMachine
-}
-
-func newSetIfEqualOperation(t *TsvetokVirtualMachine) setIfEqualOperation {
-	return setIfEqualOperation{t}
-}
-
-func (s setIfEqualOperation) Execute() error {
-	memory := s.getMemory()
-
-	leftParam, err := s.getFirstParam()
-	if err != nil {
-		return err
-	}
-
-	rightParam, err := s.getSecondParam()
-	if err != nil {
-		return err
-	}
-
-	outputAddr := memory[s.getProgramCounter()+3]
-
-	if leftParam.Value == rightParam.Value {
-		memory[outputAddr] = 1
-	} else {
-		memory[outputAddr] = 0
-	}
-
-	return nil
-}
-
-func (s setIfEqualOperation) GetNextProgramCounter() int { return s.getProgramCounter() + 4 }
-
-func (s setIfEqualOperation) Halt() bool { return false }
-
 type jumpIfTrueOperation struct {
 	*TsvetokVirtualMachine
 	nextProgramCounter int
