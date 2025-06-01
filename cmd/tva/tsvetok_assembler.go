@@ -22,9 +22,24 @@ type instructionBuilder struct {
 }
 
 func (i *instructionBuilder) addParam(paramStr string, paramIndex int) error {
+	numericPattern := regexp.MustCompile(`^\d+$`)
 	paramStr = strings.ReplaceAll(paramStr, ",", "")
+
 	if strings.Contains(paramStr, "$") {
 		paramStr = strings.ReplaceAll(paramStr, "$", "")
+	} else if strings.Contains(paramStr, "i") || numericPattern.MatchString(paramStr) {
+		paramStr = strings.ReplaceAll(paramStr, "i", "")
+
+		// TODO: Is there a nicer way we can calculate this?
+		if paramIndex == 0 {
+			i.OpCode += 100
+		} else if paramIndex == 1 {
+			i.OpCode += 1000
+		} else if paramIndex == 2 {
+			i.OpCode += 10000
+		} else {
+			return fmt.Errorf("cannot have more than three params for any operation")
+		}
 	}
 
 	paramVal, err := strconv.Atoi(paramStr)
