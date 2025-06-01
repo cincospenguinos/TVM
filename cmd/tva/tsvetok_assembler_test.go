@@ -1,6 +1,7 @@
 package tva
 
 import (
+	"fmt"
 	"testing"
 
 	tvm "tvm/internal/virtual_machine"
@@ -8,14 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func TestTsvetokAssembler_HandlesHalt(t *testing.T) {
-	assembler := NewAssemblerFromString("hlt")
-	program, err := assembler.Assemble()
-	require.NoError(t, err)
-
-	assert.Equal(t, program[0], 9)
-}
 
 func TestTsvetokAssembler_HandlesAllRegularInstructions(t *testing.T) {
 	type testCase struct {
@@ -27,6 +20,7 @@ func TestTsvetokAssembler_HandlesAllRegularInstructions(t *testing.T) {
 
 	testCases := []testCase{
 		{"hlt", 0, 9, "hlt instruction works"},
+		{"add $0, $0, $0\nhlt", 0, 2, "add instruction works"},
 	}
 
 	for _, tc := range testCases {
@@ -36,7 +30,8 @@ func TestTsvetokAssembler_HandlesAllRegularInstructions(t *testing.T) {
 			require.NoError(t, err)
 
 			machine := tvm.NewTsvetokVirtualMachine(program)
-			require.NoError(t, machine.Execute())
+			preExecutionMemory := machine.CopyMemory()
+			require.NoError(t, machine.Execute(), fmt.Sprintf("failed execution (program was %v)", preExecutionMemory))
 
 			memory := machine.CopyMemory()
 			assert.Equal(t, memory[tc.expectedAddress], tc.expectedValue)
