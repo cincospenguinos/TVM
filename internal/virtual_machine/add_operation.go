@@ -31,7 +31,7 @@ func (a addOperation) Execute() error {
 		return InvalidOutputParamErr{"add"}
 	}
 
-	return a.SetValueInMemory(outAddr.Address, leftParam.Value + rightParam.Value)
+	return a.SetValueInMemory(outAddr.Address, leftParam.Value+rightParam.Value)
 }
 
 func (a addOperation) GetNextProgramCounter() int { return a.getProgramCounter() + 4 }

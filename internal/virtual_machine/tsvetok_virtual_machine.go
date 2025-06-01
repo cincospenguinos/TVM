@@ -106,21 +106,21 @@ func (t *TsvetokVirtualMachine) getFirstParam() (operationParam, error) {
 	rawOpcode := t.memory[t.programCounter]
 	paramFormat := (rawOpcode / 100) % 10
 
-	return newOperationParam(t, paramFormat, t.programCounter + 1)
+	return newOperationParam(t, paramFormat, t.programCounter+1)
 }
 
 func (t *TsvetokVirtualMachine) getSecondParam() (operationParam, error) {
 	rawOpcode := t.memory[t.programCounter]
 	paramFormat := (rawOpcode / 1000) % 10
 
-	return newOperationParam(t, paramFormat, t.programCounter + 2)
+	return newOperationParam(t, paramFormat, t.programCounter+2)
 }
 
 func (t *TsvetokVirtualMachine) getThirdParam() (operationParam, error) {
 	rawOpcode := t.memory[t.programCounter]
 	paramFormat := rawOpcode / 10000
 
-	return newOperationParam(t, paramFormat, t.programCounter + 3)
+	return newOperationParam(t, paramFormat, t.programCounter+3)
 }
 
 func (t *TsvetokVirtualMachine) getProgramCounter() int {

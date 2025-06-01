@@ -9,7 +9,7 @@ type TsvetokAssembler struct {
 	originalAssembly string
 }
 
-func NewAssemblerFromString(programStr string) (*TsvetokAssembler) {
+func NewAssemblerFromString(programStr string) *TsvetokAssembler {
 	return &TsvetokAssembler{programStr}
 }
 

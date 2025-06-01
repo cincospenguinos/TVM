@@ -31,7 +31,7 @@ func (m multiplyOperation) Execute() error {
 		return InvalidOutputParamErr{"mlt"}
 	}
 
-	return m.SetValueInMemory(outAddr.Address, leftParam.Value * rightParam.Value)
+	return m.SetValueInMemory(outAddr.Address, leftParam.Value*rightParam.Value)
 }
 
 func (m multiplyOperation) GetNextProgramCounter() int { return m.getProgramCounter() + 4 }

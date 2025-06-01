@@ -146,8 +146,8 @@ func TestTsvetokVirtualMachine_AllInputParamsSupportImmediateMode(t *testing.T) 
 
 func TestTsvetokVirtualMachine_NoOutputParamSupportsImmediateMode(t *testing.T) {
 	type testCase struct {
-		program         []int
-		testName        string
+		program  []int
+		testName string
 	}
 
 	testCases := []testCase{
@@ -162,10 +162,9 @@ func TestTsvetokVirtualMachine_NoOutputParamSupportsImmediateMode(t *testing.T) 
 			machine := NewTsvetokVirtualMachine(tc.program)
 			err := machine.Execute()
 			require.Error(t, err)
-			
+
 			_, isInvalidParamErr := err.(InvalidOutputParamErr)
 			require.True(t, isInvalidParamErr, "error provided must be InvalidOutputParamErr")
 		})
 	}
 }
-

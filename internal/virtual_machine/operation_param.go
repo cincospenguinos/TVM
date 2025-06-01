@@ -8,7 +8,7 @@ const (
 	// ParamFormatAddress indicates that the given parameter is to be interpreted in address mode. This means
 	// that for a given value '12' in that location, it is to be interpreted as the entry in memory at address
 	// '12'
-	ParamFormatAddress   = 0
+	ParamFormatAddress = 0
 
 	// ParamFormatImmediate indicates that the given parameter is to be interpreted as an immediate. This means
 	// that for the value '7' in the parameter's location, it is to be interpreted simply as the value '7'.
@@ -21,7 +21,7 @@ const (
 // their own decisions further down
 type operationParam struct {
 	// Format is the parameter's given format (i.e. Address, Immediate, etc.)
-	Format  int
+	Format int
 
 	// Address is the integer found in memory at the parameter's location. For example: if this parameter is the
 	// first parameter, then the Address is the value in memory found at the memory entry one past the current
@@ -30,7 +30,7 @@ type operationParam struct {
 
 	// Value is the integer found in memory at the parameter's Address (see above.) This integer is equal to
 	// address if the parameter is in immediate mode
-	Value   int
+	Value int
 }
 
 func newOperationParam(t *TsvetokVirtualMachine, paramFormat, paramAddress int) (operationParam, error) {
