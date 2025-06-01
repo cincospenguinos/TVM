@@ -12,6 +12,8 @@ type TsvetokAssembler struct {
 	originalAssembly string
 }
 
+// NewAssemblerFromString returns a TsvetokAssembler instance with the provided string as assembly code.
+// Note that this does not return any errors or attempt to assemble the underlying assembly code
 func NewAssemblerFromString(programStr string) *TsvetokAssembler {
 	return &TsvetokAssembler{programStr}
 }
@@ -69,7 +71,7 @@ func (a *TsvetokAssembler) Assemble() ([]int, error) {
 	assembledProgram := make([]int, 0)
 	newLines := strings.Split(a.originalAssembly, "\n")
 
-	for lineNumber, line := range newLines {
+	for lineIndex, line := range newLines {
 		builder := &instructionBuilder{}
 		chunks := spacesPattern.Split(line, -1)
 		operation := chunks[0]
@@ -81,7 +83,7 @@ func (a *TsvetokAssembler) Assemble() ([]int, error) {
 		case "add":
 			builder.OpCode = 1
 		default:
-			return []int{}, fmt.Errorf("unknown instruction '%v' on line %v", line, lineNumber)
+			return []int{}, fmt.Errorf("unknown instruction '%v' on line %v", line, lineIndex)
 		}
 
 		for index, paramStr := range params {
