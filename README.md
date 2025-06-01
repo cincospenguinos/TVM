@@ -55,8 +55,9 @@ TVM files are binary files with all bytes in little-endian. They begin with the 
 - [x] Output instruction
 - [x] Sane defaults for Input/Output operations somewhere
 - [x] All operations support address mode
-- [ ] All operations support immediate mode
+- [x] All operations support immediate mode
 - [ ] All operations support register mode
+	* Actually I'm not sure I want to support register mode yet
 - [ ] Any memory address that does not exist will immediately exist upon lookup or writing
 	* If we expand memory to fill the space, we set everything inside to 0
 - [ ] Read a TVM binary file and execute it
