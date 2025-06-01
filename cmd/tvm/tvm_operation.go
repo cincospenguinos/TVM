@@ -31,30 +31,7 @@ func (h haltOperation) GetNextProgramCounter() int { return h.getProgramCounter(
 
 func (_ haltOperation) Halt() bool { return true }
 
-// outputOperation multiplies two nubmers together
-type outputOperation struct {
-	*TsvetokVirtualMachine
-}
-
-func newOutputOperation(t *TsvetokVirtualMachine) outputOperation {
-	return outputOperation{t}
-}
-
-func (m outputOperation) Execute() error {
-	param, err := m.getFirstParam()
-	if err != nil {
-		return err
-	}
-
-	m.EmitOutput(param.Value)
-
-	return nil
-}
-
-func (m outputOperation) GetNextProgramCounter() int { return m.getProgramCounter() + 2 }
-
-func (_ outputOperation) Halt() bool { return false }
-
+// setIfEqualOperation
 type setIfEqualOperation struct {
 	*TsvetokVirtualMachine
 }
