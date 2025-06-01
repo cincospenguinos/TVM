@@ -2,7 +2,7 @@ package tvm
 
 import ()
 
-// inputOperation multiplies two nubmers together
+// inputOperation multiplies two numbers together
 type inputOperation struct {
 	*TsvetokVirtualMachine
 }
