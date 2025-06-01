@@ -31,40 +31,6 @@ func (h haltOperation) GetNextProgramCounter() int { return h.getProgramCounter(
 
 func (_ haltOperation) Halt() bool { return true }
 
-// addOperation adds two numbers together
-type addOperation struct {
-	*TsvetokVirtualMachine
-}
-
-func newAddOperation(t *TsvetokVirtualMachine) addOperation {
-	return addOperation{t}
-}
-
-func (a addOperation) Execute() error {
-	memory := a.getMemory()
-	programCounter := a.getProgramCounter()
-
-	leftParam, err := a.getFirstParam()
-	if err != nil {
-		return err
-	}
-
-	rightParam, err := a.getSecondParam()
-	if err != nil {
-		return err
-	}
-
-	outAddr := memory[programCounter+3]
-
-	memory[outAddr] = leftParam + rightParam
-
-	return nil
-}
-
-func (a addOperation) GetNextProgramCounter() int { return a.getProgramCounter() + 4 }
-
-func (_ addOperation) Halt() bool { return false }
-
 // multiplyOperation multiplies two nubmers together
 type multiplyOperation struct {
 	*TsvetokVirtualMachine
@@ -90,7 +56,7 @@ func (m multiplyOperation) Execute() error {
 
 	outAddr := memory[programCounter+3]
 
-	memory[outAddr] = leftParam * rightParam
+	memory[outAddr] = leftParam.Value * rightParam
 
 	return nil
 }
@@ -136,7 +102,7 @@ func (m outputOperation) Execute() error {
 		return err
 	}
 
-	m.EmitOutput(param)
+	m.EmitOutput(param.Value)
 
 	return nil
 }
@@ -168,7 +134,7 @@ func (s setIfEqualOperation) Execute() error {
 
 	outputAddr := memory[s.getProgramCounter()+3]
 
-	if leftParam == rightParam {
+	if leftParam.Value == rightParam {
 		memory[outputAddr] = 1
 	} else {
 		memory[outputAddr] = 0
@@ -201,7 +167,7 @@ func (s *jumpIfTrueOperation) Execute() error {
 		return err
 	}
 
-	if firstParam != 0 {
+	if firstParam.Value != 0 {
 		s.nextProgramCounter = secondParam
 		return nil
 	}

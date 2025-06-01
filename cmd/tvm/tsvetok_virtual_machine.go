@@ -86,26 +86,39 @@ func (t *TsvetokVirtualMachine) getMemory() []int {
 	return t.memory
 }
 
+// operationParam encapsulates a given parameter, indicating what format type it is, the address in
+// the slot requested, and the value found in memory at that address. This struct only describes what
+// is currently understood by what exists in memory. Constituent operations will be required to make
+// their own decisions further down
+type operationParam struct {
+	Format  int
+	Value   int
+}
+
 const (
 	ParamFormatAddress   = 0
 	ParamFormatImmediate = 1
 )
 
-func (t *TsvetokVirtualMachine) getFirstParam() (int, error) {
+func (t *TsvetokVirtualMachine) getFirstParam() (operationParam, error) {
 	memory := t.getMemory()
 	programCounter := t.getProgramCounter()
 
 	rawOpcode := t.memory[t.programCounter]
 	paramFormat := (rawOpcode / 100) % 10
-	if paramFormat == ParamFormatAddress {
-		return memory[memory[programCounter+1]], nil
+
+	if paramFormat > ParamFormatImmediate {
+		return operationParam{}, fmt.Errorf("unknown first parameter format '%v'", paramFormat)
 	}
 
+	immediate := memory[programCounter+1]
 	if paramFormat == ParamFormatImmediate {
-		return memory[programCounter+1], nil
+		return operationParam{paramFormat, immediate}, nil
 	}
 
-	return 0, fmt.Errorf("unknown parameter format '%v'", paramFormat)
+	// ParamFormatAddress means we want the value in memory---that is, our immediate value is actually
+	// an address
+	return operationParam{paramFormat, memory[immediate]}, nil
 }
 
 func (t *TsvetokVirtualMachine) getSecondParam() (int, error) {
@@ -113,7 +126,7 @@ func (t *TsvetokVirtualMachine) getSecondParam() (int, error) {
 	programCounter := t.getProgramCounter()
 
 	rawOpcode := t.memory[t.programCounter]
-	paramFormat := rawOpcode / 1000
+	paramFormat := (rawOpcode / 1000) % 10
 	if paramFormat == ParamFormatAddress {
 		return memory[memory[programCounter+2]], nil
 	}
@@ -122,7 +135,24 @@ func (t *TsvetokVirtualMachine) getSecondParam() (int, error) {
 		return memory[programCounter+2], nil
 	}
 
-	return 0, fmt.Errorf("unknown parameter format '%v'", paramFormat)
+	return 0, fmt.Errorf("unknown second parameter format '%v'", paramFormat)
+}
+
+func (t *TsvetokVirtualMachine) getThirdParam() (int, error) {
+	memory := t.getMemory()
+	programCounter := t.getProgramCounter()
+
+	rawOpcode := t.memory[t.programCounter]
+	paramFormat := rawOpcode / 10000
+	if paramFormat == ParamFormatAddress {
+		return memory[memory[programCounter+3]], nil
+	}
+
+	if paramFormat == ParamFormatImmediate {
+		return memory[programCounter+3], nil
+	}
+
+	return 0, fmt.Errorf("unknown third parameter format '%v'", paramFormat)
 }
 
 func (t *TsvetokVirtualMachine) getProgramCounter() int {
