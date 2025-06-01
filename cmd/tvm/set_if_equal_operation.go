@@ -13,8 +13,6 @@ func newSetIfEqualOperation(t *TsvetokVirtualMachine) setIfEqualOperation {
 }
 
 func (s setIfEqualOperation) Execute() error {
-	memory := s.getMemory()
-
 	leftParam, err := s.getFirstParam()
 	if err != nil {
 		return err
@@ -34,13 +32,12 @@ func (s setIfEqualOperation) Execute() error {
 		return InvalidOutputParamErr{"seq"}
 	}
 
+	outputVal := 0
 	if leftParam.Value == rightParam.Value {
-		memory[outputAddr.Address] = 1
-	} else {
-		memory[outputAddr.Address] = 0
+		outputVal = 1
 	}
 
-	return nil
+	return s.SetValueInMemory(outputAddr.Address, outputVal)
 }
 
 func (s setIfEqualOperation) GetNextProgramCounter() int { return s.getProgramCounter() + 4 }

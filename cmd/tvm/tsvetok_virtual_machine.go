@@ -93,6 +93,15 @@ func (t *TsvetokVirtualMachine) GetValueInMemory(address int) (int, error) {
 	return -1, fmt.Errorf("cannot lookup memory at address '%v' (memory is of size '%v')", address, len(t.memory))
 }
 
+func (t *TsvetokVirtualMachine) SetValueInMemory(address, value int) error {
+	if address >= 0 && address < len(t.memory) {
+		t.memory[address] = value
+		return nil
+	}
+
+	return fmt.Errorf("cannot write to memory at address '%v' (memory is of size '%v')", address, len(t.memory))
+}
+
 func (t *TsvetokVirtualMachine) getFirstParam() (operationParam, error) {
 	rawOpcode := t.memory[t.programCounter]
 	paramFormat := (rawOpcode / 100) % 10

@@ -21,11 +21,8 @@ func (m inputOperation) Execute() error {
 		return InvalidOutputParamErr{"in"}
 	}
 
-	memory := m.getMemory()
 	number := m.ReceiveInput()
-	memory[address.Address] = number
-
-	return nil
+	return m.SetValueInMemory(address.Address, number)
 }
 
 func (m inputOperation) GetNextProgramCounter() int { return m.getProgramCounter() + 2 }

@@ -12,8 +12,6 @@ func newAddOperation(t *TsvetokVirtualMachine) addOperation {
 }
 
 func (a addOperation) Execute() error {
-	memory := a.getMemory()
-
 	leftParam, err := a.getFirstParam()
 	if err != nil {
 		return err
@@ -33,9 +31,7 @@ func (a addOperation) Execute() error {
 		return InvalidOutputParamErr{"add"}
 	}
 
-	memory[outAddr.Address] = leftParam.Value + rightParam.Value
-
-	return nil
+	return a.SetValueInMemory(outAddr.Address, leftParam.Value + rightParam.Value)
 }
 
 func (a addOperation) GetNextProgramCounter() int { return a.getProgramCounter() + 4 }

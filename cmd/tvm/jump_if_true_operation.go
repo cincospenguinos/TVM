@@ -23,12 +23,11 @@ func (s *jumpIfTrueOperation) Execute() error {
 		return err
 	}
 
+	s.nextProgramCounter = s.getProgramCounter() + 3
 	if firstParam.Value != 0 {
 		s.nextProgramCounter = secondParam.Value
-		return nil
 	}
 
-	s.nextProgramCounter = s.getProgramCounter() + 3
 	return nil
 }
 
