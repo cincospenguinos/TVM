@@ -4,19 +4,9 @@ import (
 	"fmt"
 )
 
-// InputInterface represents any external service or program that can be called upon for
-// an integer
-type InputInterface interface {
-	// ReceiveInput acquires and returns an integer from an external source
-	ReceiveInput() int
-}
-
-// OutputInterface represents any external service or program that an integer can be
-// emitted
-type OutputInterface interface {
-	// EmitOutput emits the integer provided to a given target
-	EmitOutput(int)
-}
+const (
+	RegisterLastAddress = 13
+)
 
 // TsvetokVirtualMachine is an implementation of the Tsvetok Virtual Machine Intcode machine (or TVM.)
 type TsvetokVirtualMachine struct {
@@ -113,6 +103,10 @@ func (t *TsvetokVirtualMachine) GetValueInRegisterFile(address int) (int, error)
 }
 
 func (t *TsvetokVirtualMachine) SetValueInRegisterFile(address, value int) error {
+	if address == RegisterLastAddress {
+		return AttemptedLastAddressWriteErr{}
+	}
+
 	if address >= 0 && address < len(t.registerFile) {
 		t.registerFile[address] = value
 		return nil

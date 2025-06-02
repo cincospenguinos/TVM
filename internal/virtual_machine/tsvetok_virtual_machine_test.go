@@ -174,3 +174,21 @@ func TestTsvetokVirtualMachine_RegisterModeIsSupportedEverywhere(t *testing.T) {
 		}
 	}
 }
+
+func TestTsvetokVirtualMachine_JumpIfTrueSetsTheLastAddressRegister(t *testing.T) {
+	machine := NewTsvetokVirtualMachine([]int{1106, 1, 3, 9})
+	require.NoError(t, machine.Execute())
+
+	val, err := machine.GetValueInRegisterFile(13)
+	require.NoError(t, err)
+	assert.Equal(t, 3, val)
+}
+
+func TestTsvetokVirtualMachine_SettingLastAddressRegisterReturnsError(t *testing.T) {
+	machine := NewTsvetokVirtualMachine([]int{})
+	err := machine.SetValueInRegisterFile(RegisterLastAddress, -12)
+	require.Error(t, err)
+
+	_, isAttemptedLastAddressWriteErr := err.(AttemptedLastAddressWriteErr)
+	assert.True(t, isAttemptedLastAddressWriteErr)
+}
