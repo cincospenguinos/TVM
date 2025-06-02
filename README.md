@@ -56,7 +56,7 @@ TVM files are binary files with all bytes in little-endian. They begin with the 
 - [x] Sane defaults for Input/Output operations somewhere
 - [x] All operations support address mode
 - [x] All operations support immediate mode
-- [ ] All operations support register mode
+- [x] All operations support register mode
 	* Actually I'm not sure I want to support register mode yet
 - [ ] Any memory address that does not exist will immediately exist upon lookup or writing
 	* If we expand memory to fill the space, we set everything inside to 0
@@ -76,14 +76,14 @@ Tsvetok assembly files are plain text UTF-8 files and have the following feature
 
 - [x] `hlt` is supported
 - [x] `add` is supported
-- [ ] `mlt` is supported
-- [ ] `in` is supported
-- [ ] `out` is supported
-- [ ] `seq` is supported
-- [ ] `jit` is supported
+- [x] `mlt` is supported
+- [x] `in` is supported
+- [x] `out` is supported
+- [x] `seq` is supported
+- [x] `jit` is supported
 - [ ] Labels for jumping are supported
 - [ ] Labels for data preservation are supported
-- [ ] All operations support immediates
+- [x] All operations support immediates
 - [ ] All operations support registers
 - [ ] `jif` pseudo-instruction is supported
 - [ ] `sub` pseudo-instruction is supported
