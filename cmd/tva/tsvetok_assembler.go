@@ -88,6 +88,8 @@ func (a *TsvetokAssembler) Assemble() ([]int, error) {
 			builder.OpCode = 4
 		case "seq":
 			builder.OpCode = 5
+		case "jit":
+			builder.OpCode = 6
 		case "hlt":
 			builder.OpCode = 9
 		default:
