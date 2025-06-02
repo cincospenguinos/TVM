@@ -78,11 +78,14 @@ func (a *TsvetokAssembler) Assemble() ([]int, error) {
 		params := chunks[1:]
 
 		switch operation {
-		case "hlt":
-			builder.OpCode = 9
 		case "add":
 			builder.OpCode = 1
+		case "mlt":
+			builder.OpCode = 2
+		case "hlt":
+			builder.OpCode = 9
 		default:
+			// TODO: Do we want to just gather and report all of the errors instead of stopping assembly at the first one?
 			return []int{}, fmt.Errorf("unknown instruction '%v' on line %v", line, lineIndex)
 		}
 

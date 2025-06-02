@@ -21,6 +21,7 @@ func TestTsvetokAssembler_HandlesAllRegularInstructionsInMemoryMode(t *testing.T
 	testCases := []testCase{
 		{"hlt", 0, 9, "hlt instruction works"},
 		{"add $0, $0, $0\nhlt", 0, 2, "add instruction works"},
+		{"mlt $0, $0, $1\nhlt", 1, 4, "mlt instruction works"},
 	}
 
 	for _, tc := range testCases {
@@ -50,6 +51,7 @@ func TestTsvetokAssembler_HandlesAllRegularInstructionsInImmediateMode(t *testin
 	testCases := []testCase{
 		{"add $2, i12, $0\nhlt", 0, 24, "add instruction works"},
 		{"add 5, 2, $0\nhlt", 0, 7, "add instruction with plain immediates works"},
+		{"mlt 5, 2, $0\nhlt", 0, 10, "mlt instruction with plain immediates works"},
 	}
 
 	for _, tc := range testCases {
