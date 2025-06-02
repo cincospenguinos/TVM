@@ -154,6 +154,7 @@ func TestTsvetokVirtualMachine_RegisterModeIsSupportedEverywhere(t *testing.T) {
 		{program: []int{203, 0, 9}, expectedRegister: 0, expectedValue: -12, testName: "in register input param"},
 		{program: []int{203, 1, 204, 1, 9}, expectedRegister: -1, expectedValue: -12, testName: "out register param"},
 		{program: []int{22105, 0, 11, 2, 9}, expectedRegister: 2, expectedValue: 1, testName: "seq register param"},
+		{program: []int{21101, 0, 11, 3, 2106, 1, 3, 21101, 1, 0, 3, 9}, expectedRegister: 3, expectedValue: 11, testName: "jit register param"},
 	} {
 		mockOutput := &MockOutputInterface{}
 		mockInput := MockInputInterface{-12}
