@@ -61,6 +61,8 @@ TVM files are binary files with all bytes in little-endian. They begin with the 
 - [ ] Any memory address that does not exist will immediately exist upon lookup or writing
 	* If we expand memory to fill the space, we set everything inside to 0
 - [ ] Read a TVM binary file and executes it
+- [ ] Auto expands memory when attempting to access a valid location
+	* If it's past the length of memory, then we can expand it. It would be a nice quality of life feature
 
 ## TVA
 
