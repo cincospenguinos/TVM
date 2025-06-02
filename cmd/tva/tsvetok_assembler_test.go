@@ -24,6 +24,7 @@ func TestTsvetokAssembler_HandlesAllRegularInstructionsInMemoryMode(t *testing.T
 		{"mlt $0, $0, $1\nhlt", 1, 4, "mlt instruction works"},
 		{"in $0\nhlt", 0, -69, "in instruction works"},
 		{"out $0\nhlt", -1, 4, "out instruction works"},
+		{"seq $1, $4, $1\nhlt", 1, 0, "seq instruction works"},
 	} {
 		t.Run(tc.testName, func(t *testing.T) {
 			assembler := NewAssemblerFromString(tc.program)
@@ -59,6 +60,7 @@ func TestTsvetokAssembler_HandlesAllRegularInstructionsInImmediateMode(t *testin
 		{"add 5, 2, $0\nhlt", 0, 7, "add instruction with plain immediates works"},
 		{"mlt 5, 2, $0\nhlt", 0, 10, "mlt instruction with plain immediates works"},
 		{"out i12\nhlt", -1, 12, "out instruction with immediate works"},
+		{"seq $1, 1, $0\nhlt", 0, 1, "seq instruction works"},
 	} {
 		t.Run(tc.testName, func(t *testing.T) {
 			assembler := NewAssemblerFromString(tc.program)
