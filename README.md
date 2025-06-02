@@ -44,7 +44,7 @@ Memory type means "this operand is an address in memory." Immediate type means "
 
 ### File Format
 
-TVM files are binary files with all bytes in little-endian. They begin with the ASCII characters `TVM` after which are sequences of instructions. Four bytes (32 bits) is one word in TVM, and so integers are received and munged in four byte chunks, until the footer `TVM EOF` is found.
+TVM files are binary files with all bytes in little-endian. They begin with the ASCII characters `TVM` after which are sequences of instructions. Four bytes (32 bits) is one word in TVM, and so integers are received and munged in four byte chunks, until the file ends
 
 ### TODO
 
@@ -60,8 +60,7 @@ TVM files are binary files with all bytes in little-endian. They begin with the 
 	* Actually I'm not sure I want to support register mode yet
 - [ ] Any memory address that does not exist will immediately exist upon lookup or writing
 	* If we expand memory to fill the space, we set everything inside to 0
-- [ ] Read a TVM binary file and execute it
-- [ ] Write to a TVM binary file
+- [ ] Read a TVM binary file and executes it
 
 ## TVA
 
@@ -89,6 +88,7 @@ Tsvetok assembly files are plain text UTF-8 files and have the following feature
 - [ ] `nil` psuedo-instruction is supported
 	* This sets the underlying value to simply 0 unconditionally
 - [ ] Comments are removed and ignored
+- [ ] Writes to a TVM binary file with correct syntax
 
 ## Tsvetalk
 
