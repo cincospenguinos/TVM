@@ -8,10 +8,11 @@ import (
 )
 
 type executionTestCase struct {
-	program         []int
-	expectedAddress int
-	expectedValue   int
-	testName        string
+	program          []int
+	expectedAddress  int
+	expectedRegister int
+	expectedValue    int
+	testName         string
 }
 
 func TestTsvetokVirtualMachine_HaltsProperly(t *testing.T) {
@@ -102,13 +103,13 @@ func TestTsvetokVirtualMachine_JumpIfTrueDoesNotJumpIfFalse(t *testing.T) {
 
 func TestTsvetokVirtualMachine_AllInputParamsSupportImmediateMode(t *testing.T) {
 	for _, tc := range []executionTestCase {
-		{[]int{101, 10, 2, 0, 9}, 0, 12, "add first param immediate"},
-		{[]int{1001, 4, 10, 0, 9}, 0, 19, "add second param immediate"},
-		{[]int{1102, 1, 0, 0, 9}, 0, 0, "mlt both params immediate"},
-		{[]int{104, 100, 9}, -1, 100, "out one immediate parameter"},
-		{[]int{1105, 1105, 1105, 0, 9}, 0, 1, "seq first param immediate"},
-		{[]int{106, 1, 8, 0, 0, 0, 1, 9, 7}, 1, 1, "jit first param immediate"},
-		{[]int{1006, 1, 7, 0, 0, 0, 1, 9, 7}, 1, 1, "jit second param immediate"},
+		{program: []int{101, 10, 2, 0, 9}, expectedAddress: 0, expectedValue: 12, testName: "add first param immediate"},
+		{program: []int{1001, 4, 10, 0, 9}, expectedAddress: 0, expectedValue: 19, testName: "add second param immediate"},
+		{program: []int{1102, 1, 0, 0, 9}, expectedAddress: 0, expectedValue: 0, testName: "mlt both params immediate"},
+		{program: []int{104, 100, 9}, expectedAddress: -1, expectedValue: 100, testName: "out one immediate parameter"},
+		{program: []int{1105, 1105, 1105, 0, 9}, expectedAddress: 0, expectedValue: 1, testName: "seq first param immediate"},
+		{program: []int{106, 1, 8, 0, 0, 0, 1, 9, 7}, expectedAddress: 1, expectedValue: 1, testName: "jit first param immediate"},
+		{program: []int{1006, 1, 7, 0, 0, 0, 1, 9, 7}, expectedAddress: 1, expectedValue: 1, testName: "jit second param immediate"},
 	} {
 		t.Run(tc.testName, func(t *testing.T) {
 			mockOutput := &MockOutputInterface{}
@@ -142,5 +143,21 @@ func TestTsvetokVirtualMachine_NoOutputParamSupportsImmediateMode(t *testing.T) 
 			_, isInvalidParamErr := err.(InvalidOutputParamErr)
 			require.True(t, isInvalidParamErr, "error provided must be InvalidOutputParamErr")
 		})
+	}
+}
+
+func TestTsvetokVirtualMachine_RegisterModeIsSupportedEverywhere(t *testing.T) {
+	for _, tc := range []executionTestCase {
+		{program: []int{21201, 0, 1, 0, 9}, expectedRegister: 0, expectedValue: 1, testName: "add registers most params"},
+	} {
+		mockOutput := &MockOutputInterface{}
+		machine := NewTsvetokVirtualMachine(tc.program)
+		machine.SetOutputInterface(mockOutput)
+
+		require.NoError(t, machine.Execute())
+
+		actualValue, err := machine.GetValueInRegisterFile(tc.expectedRegister)
+		require.NoError(t, err)
+		assert.Equal(t, tc.expectedValue, actualValue)
 	}
 }

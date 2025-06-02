@@ -21,6 +21,7 @@ type OutputInterface interface {
 // TsvetokVirtualMachine is an implementation of the Tsvetok Virtual Machine Intcode machine (or TVM.)
 type TsvetokVirtualMachine struct {
 	memory         []int
+	registerFile   []int
 	programCounter int
 	InputInterface
 	OutputInterface
@@ -29,6 +30,7 @@ type TsvetokVirtualMachine struct {
 func NewTsvetokVirtualMachine(program []int) *TsvetokVirtualMachine {
 	return &TsvetokVirtualMachine{
 		memory:         program,
+		registerFile:   make([]int, 14),
 		programCounter: 0,
 	}
 }
@@ -100,6 +102,23 @@ func (t *TsvetokVirtualMachine) SetValueInMemory(address, value int) error {
 	}
 
 	return fmt.Errorf("cannot write to memory at address '%v' (memory is of size '%v')", address, len(t.memory))
+}
+
+func (t *TsvetokVirtualMachine) GetValueInRegisterFile(address int) (int, error) {
+	if address >= 0 && address < len(t.registerFile) {
+		return t.registerFile[address], nil
+	}
+
+	return 0, fmt.Errorf("cannot lookup register at address '%v' (register file is of size '%v')", address, len(t.registerFile))
+}
+
+func (t *TsvetokVirtualMachine) SetValueInRegisterFile(address, value int) error {
+	if address >= 0 && address < len(t.registerFile) {
+		t.registerFile[address] = value
+		return nil
+	}
+
+	return fmt.Errorf("cannot write to register file at address '%v' (register file is of size '%v')", address, len(t.registerFile))
 }
 
 func (t *TsvetokVirtualMachine) getFirstParam() (operationParam, error) {

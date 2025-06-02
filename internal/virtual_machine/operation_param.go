@@ -13,6 +13,11 @@ const (
 	// ParamFormatImmediate indicates that the given parameter is to be interpreted as an immediate. This means
 	// that for the value '7' in the parameter's location, it is to be interpreted simply as the value '7'.
 	ParamFormatImmediate = 1
+
+	// ParamFormatRegister indicates that the given parameter is into the register file. The register file
+	// is addressed in the same manner as memory but is limited to its space and cannot be expanded (see
+	// TsvetokVirtualMachine docs)
+	ParamFormatRegister = 2
 )
 
 // operationParam encapsulates a given parameter, indicating what format type it is, the address in
@@ -34,7 +39,7 @@ type operationParam struct {
 }
 
 func newOperationParam(t *TsvetokVirtualMachine, paramFormat, paramAddress int) (operationParam, error) {
-	if paramFormat != ParamFormatImmediate && paramFormat != ParamFormatAddress {
+	if paramFormat != ParamFormatImmediate && paramFormat != ParamFormatAddress && paramFormat != ParamFormatRegister {
 		return operationParam{}, fmt.Errorf("unknown parameter format '%v' at address '%v'", paramFormat, paramAddress)
 	}
 
@@ -45,6 +50,15 @@ func newOperationParam(t *TsvetokVirtualMachine, paramFormat, paramAddress int) 
 
 	if paramFormat == ParamFormatImmediate {
 		return operationParam{paramFormat, immediate, immediate}, nil
+	}
+
+	if paramFormat == ParamFormatRegister {
+		registerValue, err := t.GetValueInRegisterFile(immediate)
+		if err != nil {
+			return operationParam{}, err
+		}
+
+		return operationParam{paramFormat, immediate, registerValue}, nil
 	}
 
 	value, err := t.GetValueInMemory(immediate)

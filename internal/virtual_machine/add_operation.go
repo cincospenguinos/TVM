@@ -27,11 +27,15 @@ func (a addOperation) Execute() error {
 		return err
 	}
 
-	if outAddr.Format != ParamFormatAddress {
-		return InvalidOutputParamErr{"add"}
+	if outAddr.Format == ParamFormatAddress {
+		return a.SetValueInMemory(outAddr.Address, leftParam.Value+rightParam.Value)	
 	}
 
-	return a.SetValueInMemory(outAddr.Address, leftParam.Value+rightParam.Value)
+	if outAddr.Format == ParamFormatRegister {
+		return a.SetValueInRegisterFile(outAddr.Address, leftParam.Value+rightParam.Value)
+	}
+
+	return InvalidOutputParamErr{"add"}
 }
 
 func (a addOperation) GetNextProgramCounter() int { return a.getProgramCounter() + 4 }
