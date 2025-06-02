@@ -27,11 +27,15 @@ func (m multiplyOperation) Execute() error {
 		return err
 	}
 
-	if outAddr.Format != ParamFormatAddress {
-		return InvalidOutputParamErr{"mlt"}
+	if outAddr.Format == ParamFormatAddress {
+		return m.SetValueInMemory(outAddr.Address, leftParam.Value*rightParam.Value)
 	}
 
-	return m.SetValueInMemory(outAddr.Address, leftParam.Value*rightParam.Value)
+	if outAddr.Format == ParamFormatRegister {
+		return m.SetValueInRegisterFile(outAddr.Address, leftParam.Value*rightParam.Value)
+	}
+
+	return InvalidOutputParamErr{"mlt"}
 }
 
 func (m multiplyOperation) GetNextProgramCounter() int { return m.getProgramCounter() + 4 }

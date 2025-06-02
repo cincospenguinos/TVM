@@ -17,12 +17,17 @@ func (m inputOperation) Execute() error {
 		return err
 	}
 
-	if address.Format != ParamFormatAddress {
-		return InvalidOutputParamErr{"in"}
+	number := m.ReceiveInput()
+
+	if address.Format == ParamFormatAddress {
+		return m.SetValueInMemory(address.Address, number)
 	}
 
-	number := m.ReceiveInput()
-	return m.SetValueInMemory(address.Address, number)
+	if address.Format == ParamFormatRegister {
+		return m.SetValueInRegisterFile(address.Address, number)
+	}
+
+	return InvalidOutputParamErr{"in"}
 }
 
 func (m inputOperation) GetNextProgramCounter() int { return m.getProgramCounter() + 2 }

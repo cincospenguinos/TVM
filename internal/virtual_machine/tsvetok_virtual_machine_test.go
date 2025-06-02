@@ -137,6 +137,7 @@ func TestTsvetokVirtualMachine_NoOutputParamSupportsImmediateMode(t *testing.T) 
 	} {
 		t.Run(tc.testName, func(t *testing.T) {
 			machine := NewTsvetokVirtualMachine(tc.program)
+			machine.SetInputInterface(MockInputInterface{0})
 			err := machine.Execute()
 			require.Error(t, err)
 
@@ -149,15 +150,25 @@ func TestTsvetokVirtualMachine_NoOutputParamSupportsImmediateMode(t *testing.T) 
 func TestTsvetokVirtualMachine_RegisterModeIsSupportedEverywhere(t *testing.T) {
 	for _, tc := range []executionTestCase {
 		{program: []int{21201, 0, 1, 0, 9}, expectedRegister: 0, expectedValue: 1, testName: "add registers most params"},
+		{program: []int{21102, 2, 2, 0, 9}, expectedRegister: 0, expectedValue: 4, testName: "mlt registers most params"},
+		{program: []int{203, 0, 9}, expectedRegister: 0, expectedValue: -12, testName: "in register input param"},
+		{program: []int{203, 1, 204, 1, 9}, expectedRegister: -1, expectedValue: -12, testName: "out register param"},
 	} {
 		mockOutput := &MockOutputInterface{}
+		mockInput := MockInputInterface{-12}
 		machine := NewTsvetokVirtualMachine(tc.program)
 		machine.SetOutputInterface(mockOutput)
+		machine.SetInputInterface(mockInput)
 
 		require.NoError(t, machine.Execute())
 
-		actualValue, err := machine.GetValueInRegisterFile(tc.expectedRegister)
-		require.NoError(t, err)
-		assert.Equal(t, tc.expectedValue, actualValue)
+		if tc.expectedRegister < 0 { // asserting output instruction
+			require.NotNil(t, mockOutput.LastNumberReceived)
+			assert.Equal(t, tc.expectedValue, *mockOutput.LastNumberReceived)
+		} else {
+			actualValue, err := machine.GetValueInRegisterFile(tc.expectedRegister)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectedValue, actualValue)
+		}
 	}
 }
