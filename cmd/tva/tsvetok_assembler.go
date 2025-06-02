@@ -82,11 +82,15 @@ func (a *TsvetokAssembler) Assemble() ([]int, error) {
 			builder.OpCode = 1
 		case "mlt":
 			builder.OpCode = 2
+		case "in":
+			builder.OpCode = 3
+		case "out":
+			builder.OpCode = 4
 		case "hlt":
 			builder.OpCode = 9
 		default:
 			// TODO: Do we want to just gather and report all of the errors instead of stopping assembly at the first one?
-			return []int{}, fmt.Errorf("unknown instruction '%v' on line %v", line, lineIndex)
+			return []int{}, fmt.Errorf("unknown instruction '%v' on line %v", operation, lineIndex)
 		}
 
 		for index, paramStr := range params {

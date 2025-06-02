@@ -7,22 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type MockInputInterface struct {
-	NumberToReturn int
-}
-
-func (m MockInputInterface) ReceiveInput() int {
-	return m.NumberToReturn
-}
-
-type MockOutputInterface struct {
-	LastNumberReceived *int
-}
-
-func (m *MockOutputInterface) EmitOutput(number int) {
-	m.LastNumberReceived = &number
-}
-
 func TestTsvetokVirtualMachine_HaltsProperly(t *testing.T) {
 	err := NewTsvetokVirtualMachine([]int{9}).Execute()
 	require.NoError(t, err)
