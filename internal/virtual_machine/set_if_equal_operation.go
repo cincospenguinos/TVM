@@ -28,16 +28,20 @@ func (s setIfEqualOperation) Execute() error {
 		return err
 	}
 
-	if outputAddr.Format != ParamFormatAddress {
-		return InvalidOutputParamErr{"seq"}
-	}
-
 	outputVal := 0
 	if leftParam.Value == rightParam.Value {
 		outputVal = 1
 	}
 
-	return s.SetValueInMemory(outputAddr.Address, outputVal)
+	if outputAddr.Format == ParamFormatAddress {
+		return s.SetValueInMemory(outputAddr.Address, outputVal)
+	}
+
+	if outputAddr.Format == ParamFormatRegister {
+		return s.SetValueInRegisterFile(outputAddr.Address, outputVal)
+	}
+
+	return InvalidOutputParamErr{"seq"}
 }
 
 func (s setIfEqualOperation) GetNextProgramCounter() int { return s.getProgramCounter() + 4 }
