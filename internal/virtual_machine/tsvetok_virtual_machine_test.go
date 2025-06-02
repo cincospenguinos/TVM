@@ -7,6 +7,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type executionTestCase struct {
+	program         []int
+	expectedAddress int
+	expectedValue   int
+	testName        string
+}
+
 func TestTsvetokVirtualMachine_HaltsProperly(t *testing.T) {
 	err := NewTsvetokVirtualMachine([]int{9}).Execute()
 	require.NoError(t, err)
@@ -94,13 +101,7 @@ func TestTsvetokVirtualMachine_JumpIfTrueDoesNotJumpIfFalse(t *testing.T) {
 }
 
 func TestTsvetokVirtualMachine_AllInputParamsSupportImmediateMode(t *testing.T) {
-	type testCase struct {
-		program         []int
-		expectedAddress int
-		expectedValue   int
-		testName        string
-	}
-	testCases := []testCase{
+	for _, tc := range []executionTestCase {
 		{[]int{101, 10, 2, 0, 9}, 0, 12, "add first param immediate"},
 		{[]int{1001, 4, 10, 0, 9}, 0, 19, "add second param immediate"},
 		{[]int{1102, 1, 0, 0, 9}, 0, 0, "mlt both params immediate"},
@@ -108,9 +109,7 @@ func TestTsvetokVirtualMachine_AllInputParamsSupportImmediateMode(t *testing.T) 
 		{[]int{1105, 1105, 1105, 0, 9}, 0, 1, "seq first param immediate"},
 		{[]int{106, 1, 8, 0, 0, 0, 1, 9, 7}, 1, 1, "jit first param immediate"},
 		{[]int{1006, 1, 7, 0, 0, 0, 1, 9, 7}, 1, 1, "jit second param immediate"},
-	}
-
-	for _, tc := range testCases {
+	} {
 		t.Run(tc.testName, func(t *testing.T) {
 			mockOutput := &MockOutputInterface{}
 			machine := NewTsvetokVirtualMachine(tc.program)
@@ -129,19 +128,12 @@ func TestTsvetokVirtualMachine_AllInputParamsSupportImmediateMode(t *testing.T) 
 }
 
 func TestTsvetokVirtualMachine_NoOutputParamSupportsImmediateMode(t *testing.T) {
-	type testCase struct {
-		program  []int
-		testName string
-	}
-
-	testCases := []testCase{
-		{[]int{10001, 0, 0, 12, 9}, "add output param immediate"},
-		{[]int{10002, 0, 0, -69, 9}, "mlt output param immediate"},
-		{[]int{103, -1, 9}, "in output param immediate"},
-		{[]int{10005, 0, 0, 420, 9}, "seq output param immediate"},
-	}
-
-	for _, tc := range testCases {
+	for _, tc := range []executionTestCase {
+		{program: []int{10001, 0, 0, 12, 9}, testName: "add output param immediate"},
+		{program: []int{10002, 0, 0, -69, 9}, testName: "mlt output param immediate"},
+		{program: []int{103, -1, 9}, testName: "in output param immediate"},
+		{program: []int{10005, 0, 0, 420, 9}, testName: "seq output param immediate"},
+	} {
 		t.Run(tc.testName, func(t *testing.T) {
 			machine := NewTsvetokVirtualMachine(tc.program)
 			err := machine.Execute()
