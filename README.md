@@ -99,3 +99,9 @@ A higher level language with a grammar we compile down to TVA and the TVM format
 ### TODO
 
 * What is the grammar for this? I'm thinking some combination of Mini Java, Ruby, and Lox. I think the only primitive type should be an integer, and everything else is in its standard library. I think we should do a copypasta import kind of thing, but maybe with a multi-pass compiler (I like `#include` directives, personally)
+
+
+## PROJECT TODOS
+
+- [ ] GitLab/Travis CI pipeline for building/testing/deploying?
+- [ ] golangci-lint to check things like errors and stuff
