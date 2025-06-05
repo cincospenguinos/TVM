@@ -54,6 +54,14 @@ func (i *instructionBuilder) setOperation(operation string) error {
 	return nil
 }
 
+const (
+	ParamIndicatorReservedRegister = "r"
+	ParamIndicatorTemporaryRegister = "t"
+	ParamIndicatorMemoryAddress = "$"
+	ParamIndicatorImmediate = "i"
+	ParamLastAddressRegister = "la"
+)
+
 var registerValueMap = map[string]int {
 	"r0": tvm.RegisterReserved0,
 	"r1": tvm.RegisterReserved1,
@@ -78,13 +86,13 @@ func (i *instructionBuilder) addParam(paramStr string, paramIndex int) error {
 	paramStr = strings.ReplaceAll(paramStr, ",", "")
 
 	var paramFormat tvm.ParamFormat
-	if strings.Contains(paramStr, "$") {
-		paramStr = strings.ReplaceAll(paramStr, "$", "")
+	if strings.Contains(paramStr, ParamIndicatorMemoryAddress) {
+		paramStr = strings.ReplaceAll(paramStr, ParamIndicatorMemoryAddress, "")
 		paramFormat = tvm.ParamFormatAddress
-	} else if strings.Contains(paramStr, "i") || numericPattern.MatchString(paramStr) {
-		paramStr = strings.ReplaceAll(paramStr, "i", "")
+	} else if strings.Contains(paramStr, ParamIndicatorImmediate) || numericPattern.MatchString(paramStr) {
+		paramStr = strings.ReplaceAll(paramStr, ParamIndicatorImmediate, "")
 		paramFormat = tvm.ParamFormatImmediate
-	} else if strings.Contains(paramStr, "r") || strings.Contains(paramStr, "t") || paramStr == "la" {
+	} else if strings.Contains(paramStr, ParamIndicatorReservedRegister) || strings.Contains(paramStr, ParamIndicatorTemporaryRegister) || paramStr == ParamLastAddressRegister {
 		registerValue, registerExists := registerValueMap[paramStr]
 		if !registerExists {
 			return fmt.Errorf("invalid register param '%v'", paramStr)
