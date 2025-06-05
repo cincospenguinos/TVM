@@ -54,22 +54,20 @@ func (i *instructionBuilder) setOperation(operation string) error {
 	return nil
 }
 
-// TODO: Make these constant values in tvm package
 var registerValueMap = map[string]int {
-	"r0": 0,
-	"r1": 1,
-	"r2": 2,
-	"r3": 3,
-	"r4": 4,
-	"t0": 5,
-	"t1": 6,
-	"t2": 7,
-	"t3": 8,
-	"t4": 9,
-	"t5": 10,
-	"t6": 11,
-	"t7": 12,
-	"t8": 13,
+	"r0": tvm.RegisterReserved0,
+	"r1": tvm.RegisterReserved1,
+	"r2": tvm.RegisterReserved2,
+	"r3": tvm.RegisterReserved3,
+	"r4": tvm.RegisterReserved4,
+	"t0": tvm.RegisterTemporary0,
+	"t1": tvm.RegisterTemporary1,
+	"t2": tvm.RegisterTemporary2,
+	"t3": tvm.RegisterTemporary3,
+	"t4": tvm.RegisterTemporary4,
+	"t5": tvm.RegisterTemporary5,
+	"t6": tvm.RegisterTemporary6,
+	"t7": tvm.RegisterTemporary7,
 	"la": tvm.RegisterLastAddress,
 }
 

@@ -30,7 +30,7 @@ The registers are enumerated as follows:
 
 ```
 r0...r4 -> 0, 1, 2, 3, 4
-t0...t8 -> 5, 6, 7, 8, 9, 10, 11, 12
+t0...t7 -> 5, 6, 7, 8, 9, 10, 11, 12
 la       -> 13
 ```
 
@@ -66,6 +66,7 @@ TVM files are binary files with all bytes in little-endian. They begin with the 
 - [ ] Read a TVM binary file and executes it
 - [ ] Auto expands memory when attempting to access a valid location
 	* If it's past the length of memory, then we can expand it. It would be a nice quality of life feature
+- [ ] Do we want to allow the program counter to be a read-only register by programmers? It'd be a nice quality of life thing (`out pc` could act like a print statement)
 
 ## TVA
 
@@ -105,7 +106,6 @@ A higher level language with a grammar we compile down to TVA and the TVM format
 ### TODO
 
 * What is the grammar for this? I'm thinking some combination of Mini Java, Ruby, and Lox. I think the only primitive type should be an integer, and everything else is in its standard library. I think we should do a copypasta import kind of thing, but maybe with a multi-pass compiler (I like `#include` directives, personally)
-
 
 ## PROJECT TODOS
 

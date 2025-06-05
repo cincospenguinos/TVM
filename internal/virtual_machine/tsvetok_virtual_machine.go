@@ -5,6 +5,48 @@ import (
 )
 
 const (
+	// RegisterReserved0 is a reserved register. Reserved registers, by convention, preserve their values across jumps
+	RegisterReserved0 = 0
+
+	// RegisterReserved1 is a reserved register. Reserved registers, by convention, preserve their values across jumps
+	RegisterReserved1 = 1
+
+	// RegisterReserved2 is a reserved register. Reserved registers, by convention, preserve their values across jumps
+	RegisterReserved2 = 2
+
+	// RegisterReserved3 is a reserved register. Reserved registers, by convention, preserve their values across jumps
+	RegisterReserved3 = 3
+
+	// RegisterReserved4 is a reserved register. Reserved registers, by convention, preserve their values across jumps
+	RegisterReserved4 = 4
+
+	// RegisterTemporary0 is a temporary register. By convention these are not promised to retain their values across jumps
+	RegisterTemporary0 = 5
+
+	// RegisterTemporary1 is a temporary register. By convention these are not promised to retain their values across jumps
+	RegisterTemporary1 = 6
+
+	// RegisterTemporary2 is a temporary register. By convention these are not promised to retain their values across jumps
+	RegisterTemporary2 = 7
+
+	// RegisterTemporary3 is a temporary register. By convention these are not promised to retain their values across jumps
+	RegisterTemporary3 = 8
+
+	// RegisterTemporary4 is a temporary register. By convention these are not promised to retain their values across jumps
+	RegisterTemporary4 = 9
+
+	// RegisterTemporary5 is a temporary register. By convention these are not promised to retain their values across jumps
+	RegisterTemporary5 = 10
+
+	// RegisterTemporary6 is a temporary register. By convention these are not promised to retain their values across jumps
+	RegisterTemporary6 = 11
+
+	// RegisterTemporary7 is a temporary register. By convention these are not promised to retain their values across jumps
+	RegisterTemporary7 = 12
+
+	// RegisterLastAddress is the instruction just after the last jump instruction. This register defaults to 0 upon initialization
+	// and is set solely by the jump instruction. This register is read-only by all other instructions and cannot be modified
+	// except by use of the jump instruction
 	RegisterLastAddress = 13
 )
 
