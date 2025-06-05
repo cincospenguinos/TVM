@@ -102,7 +102,7 @@ func TestTsvetokVirtualMachine_JumpIfTrueDoesNotJumpIfFalse(t *testing.T) {
 }
 
 func TestTsvetokVirtualMachine_AllInputParamsSupportImmediateMode(t *testing.T) {
-	for _, tc := range []executionTestCase {
+	for _, tc := range []executionTestCase{
 		{program: []int{101, 10, 2, 0, 9}, expectedAddress: 0, expectedValue: 12, testName: "add first param immediate"},
 		{program: []int{1001, 4, 10, 0, 9}, expectedAddress: 0, expectedValue: 19, testName: "add second param immediate"},
 		{program: []int{1102, 1, 0, 0, 9}, expectedAddress: 0, expectedValue: 0, testName: "mlt both params immediate"},
@@ -129,7 +129,7 @@ func TestTsvetokVirtualMachine_AllInputParamsSupportImmediateMode(t *testing.T) 
 }
 
 func TestTsvetokVirtualMachine_NoOutputParamSupportsImmediateMode(t *testing.T) {
-	for _, tc := range []executionTestCase {
+	for _, tc := range []executionTestCase{
 		{program: []int{10001, 0, 0, 12, 9}, testName: "add output param immediate"},
 		{program: []int{10002, 0, 0, -69, 9}, testName: "mlt output param immediate"},
 		{program: []int{103, -1, 9}, testName: "in output param immediate"},
@@ -148,7 +148,7 @@ func TestTsvetokVirtualMachine_NoOutputParamSupportsImmediateMode(t *testing.T) 
 }
 
 func TestTsvetokVirtualMachine_RegisterModeIsSupportedEverywhere(t *testing.T) {
-	for _, tc := range []executionTestCase {
+	for _, tc := range []executionTestCase{
 		{program: []int{21201, 0, 1, 0, 9}, expectedRegister: 0, expectedValue: 1, testName: "add registers most params"},
 		{program: []int{21102, 2, 2, 0, 9}, expectedRegister: 0, expectedValue: 4, testName: "mlt registers most params"},
 		{program: []int{203, 0, 9}, expectedRegister: 0, expectedValue: -12, testName: "in register input param"},

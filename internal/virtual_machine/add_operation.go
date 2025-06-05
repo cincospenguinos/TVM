@@ -28,7 +28,7 @@ func (a addOperation) Execute() error {
 	}
 
 	if outAddr.Format == ParamFormatAddress {
-		return a.SetValueInMemory(outAddr.Address, leftParam.Value+rightParam.Value)	
+		return a.SetValueInMemory(outAddr.Address, leftParam.Value+rightParam.Value)
 	}
 
 	if outAddr.Format == ParamFormatRegister {
