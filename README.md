@@ -89,8 +89,9 @@ Tsvetok assembly files are plain text UTF-8 files and have the following feature
 - [ ] `sub` pseudo-instruction is supported
 - [ ] `nil` psuedo-instruction is supported
 	* This sets the underlying value to simply 0 unconditionally
-- [ ] Comments are removed and ignored
+- [x] Comments are removed and ignored
 - [ ] Writes to a TVM binary file with correct syntax
+- [ ] Do we want to do validation in the assembler? I think we do. If there's a semantic error with the execution of the underlying program, the programmer really ought to know.
 
 ## Tsvetalk
 
