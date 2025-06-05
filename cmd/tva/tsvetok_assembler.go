@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	tvm "tvm/internal/virtual_machine"
 )
 
 // TsvetokAssembler assembles a given TVA program and converts it into a TVM executable
@@ -49,40 +51,29 @@ func (i *instructionBuilder) setOperation(operation string) error {
 	return nil
 }
 
+// addParam() adds a parameter to this instruction builder given the string value and where
+// in the instruction it is found. Returns an error if the parameter is malformed
 func (i *instructionBuilder) addParam(paramStr string, paramIndex int) error {
 	numericPattern := regexp.MustCompile(`^\d+$`)
 	paramStr = strings.ReplaceAll(paramStr, ",", "")
 
+	var paramFormat tvm.ParamFormat
 	if strings.Contains(paramStr, "$") {
 		paramStr = strings.ReplaceAll(paramStr, "$", "")
+		paramFormat = tvm.ParamFormatAddress
 	} else if strings.Contains(paramStr, "i") || numericPattern.MatchString(paramStr) {
 		paramStr = strings.ReplaceAll(paramStr, "i", "")
-
-		// TODO: Is there a nicer way we can calculate this?
-		if paramIndex == 0 {
-			i.OpCode += 100
-		} else if paramIndex == 1 {
-			i.OpCode += 1000
-		} else if paramIndex == 2 {
-			i.OpCode += 10000
-		} else {
-			return fmt.Errorf("cannot have more than three params for any operation")
-		}
+		paramFormat = tvm.ParamFormatImmediate
 	} else if strings.Contains(paramStr, "r") {
 		paramStr = strings.ReplaceAll(paramStr, "r", "")
-
-		// TODO: Is there a nicer way we can calculate this?
-		if paramIndex == 0 {
-			i.OpCode += 200
-		} else if paramIndex == 1 {
-			i.OpCode += 2000
-		} else if paramIndex == 2 {
-			i.OpCode += 20000
-		} else {
-			return fmt.Errorf("cannot have more than three params for any operation")
-		}
+		paramFormat = tvm.ParamFormatRegister
 	} else {
 		return fmt.Errorf("unknown parameter format '%v'", paramStr)
+	}
+
+	err := i.updateOpcodeForParam(paramFormat, paramIndex)
+	if err != nil {
+		return err
 	}
 
 	paramVal, err := strconv.Atoi(paramStr)
@@ -93,6 +84,21 @@ func (i *instructionBuilder) addParam(paramStr string, paramIndex int) error {
 	// TODO: Do we need to respect the index? Like do an insert?
 	i.Params = append(i.Params, paramVal)
 
+	return nil
+}
+
+func (i *instructionBuilder) updateOpcodeForParam(paramFormat tvm.ParamFormat, index int) error {
+	if index > 2 {
+		return fmt.Errorf("cannot have more than three params for any operation")
+	}
+
+	multiplier := 100
+	for index > 0 {
+		multiplier *= 10
+		index -= 1
+	}
+
+	i.OpCode += int(paramFormat) * multiplier
 	return nil
 }
 

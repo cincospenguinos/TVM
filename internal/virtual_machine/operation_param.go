@@ -4,6 +4,8 @@ import (
 	"fmt"
 )
 
+type ParamFormat int
+
 const (
 	// ParamFormatAddress indicates that the given parameter is to be interpreted in address mode. This means
 	// that for a given value '12' in that location, it is to be interpreted as the entry in memory at address
