@@ -68,6 +68,21 @@ func (i *instructionBuilder) addParam(paramStr string, paramIndex int) error {
 		} else {
 			return fmt.Errorf("cannot have more than three params for any operation")
 		}
+	} else if strings.Contains(paramStr, "r") {
+		paramStr = strings.ReplaceAll(paramStr, "r", "")
+
+		// TODO: Is there a nicer way we can calculate this?
+		if paramIndex == 0 {
+			i.OpCode += 200
+		} else if paramIndex == 1 {
+			i.OpCode += 2000
+		} else if paramIndex == 2 {
+			i.OpCode += 20000
+		} else {
+			return fmt.Errorf("cannot have more than three params for any operation")
+		}
+	} else {
+		return fmt.Errorf("unknown parameter format '%v'", paramStr)
 	}
 
 	paramVal, err := strconv.Atoi(paramStr)
@@ -99,7 +114,6 @@ func (a *TsvetokAssembler) Assemble() ([]int, error) {
 	for _, line := range a.generateLinesFromOriginalAssembly() {
 		builder := &instructionBuilder{}
 		chunks := spacesPattern.Split(line.assemblyCode, -1)
-		params := chunks[1:]
 
 		// TODO: Do we want to just gather and report all of the errors instead of stopping assembly at the first one?
 		err := builder.setOperation(chunks[0])
@@ -107,7 +121,7 @@ func (a *TsvetokAssembler) Assemble() ([]int, error) {
 			return []int{}, errors.Join(err, fmt.Errorf("error on line '%v'", line.lineNumber))
 		}
 
-		for index, paramStr := range params {
+		for index, paramStr := range chunks[1:] {
 			err := builder.addParam(paramStr, index)
 			if err != nil {
 				return []int{}, errors.Join(err, fmt.Errorf("error on line '%v'", line.lineNumber))

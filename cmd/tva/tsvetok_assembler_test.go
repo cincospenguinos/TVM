@@ -88,6 +88,33 @@ func TestTsvetokAssembler_HandlesAllRegularInstructionsInImmediateMode(t *testin
 	}
 }
 
+func TestTsvetokAssembler_HandlesAllRegularInstructionsInRegisterMode(t *testing.T) {
+	for _, tc := range []executionTestCase{
+		{"add i2, r0, r0\nadd r0, r0, $0\nhlt", 0, 4, "add supports register mode"},
+	} {
+		t.Run(tc.testName, func (t *testing.T) {
+			assembler := NewAssemblerFromString(tc.program)
+			program, err := assembler.Assemble()
+			require.NoError(t, err)
+
+			machine := tvm.NewTsvetokVirtualMachine(program)
+			mockOutput := &tvm.MockOutputInterface{}
+			machine.SetOutputInterface(mockOutput)
+
+			preExecutionMemory := machine.CopyMemory()
+			require.NoError(t, machine.Execute(), fmt.Sprintf("failed execution (program was %v)", preExecutionMemory))
+
+			if tc.expectedAddress < 0 { // Assertion on output
+				require.NotNil(t, mockOutput.LastNumberReceived)
+				assert.Equal(t, tc.expectedValue, *mockOutput.LastNumberReceived, "output value was not equal")
+			} else {
+				memory := machine.CopyMemory()
+				assert.Equal(t, tc.expectedValue, memory[tc.expectedAddress])
+			}
+		})
+	}
+}
+
 func TestTsvetokAssembler_IgnoresCommentsSpacesAndTheLike(t *testing.T) {
 	program := `# This is a comment. In Tsvetok Assembly we start comments
 	# with the '#' character. There are no multi-line comments;
