@@ -66,23 +66,21 @@ func (i *instructionBuilder) toIntcode() []int {
 	return intcode
 }
 
+// tsvasmLine is an intermediary struct that represents the original line of assembly code
+// and what line number it originally was in. Keeping the two together allows for better
+// debug information and error reporting
+type tsvasmLine struct {
+	assemblyCode string
+	lineNumber   int
+}
+
 func (a *TsvetokAssembler) Assemble() ([]int, error) {
-	commentsPattern := regexp.MustCompile(`(?m)#.*$`)
 	spacesPattern := regexp.MustCompile(`\s+`)
 
 	assembledProgram := make([]int, 0)
-
-	noComments := commentsPattern.ReplaceAllLiteralString(a.originalAssembly, "")
-	newLines := strings.Split(noComments, "\n")
-
-	for lineIndex, line := range newLines {
-		trimmedLine := strings.TrimSpace(line)
-		if trimmedLine == "" {
-			continue
-		}
-
+	for _, line := range a.generateLinesFromOriginalAssembly() {
 		builder := &instructionBuilder{}
-		chunks := spacesPattern.Split(trimmedLine, -1)
+		chunks := spacesPattern.Split(line.assemblyCode, -1)
 		operation := chunks[0]
 		params := chunks[1:]
 
@@ -103,7 +101,7 @@ func (a *TsvetokAssembler) Assemble() ([]int, error) {
 			builder.OpCode = 9
 		default:
 			// TODO: Do we want to just gather and report all of the errors instead of stopping assembly at the first one?
-			return []int{}, fmt.Errorf("unknown instruction '%v' on line %v", operation, lineIndex)
+			return []int{}, fmt.Errorf("unknown instruction '%v' on line %v", operation, line.lineNumber)
 		}
 
 		for index, paramStr := range params {
@@ -117,4 +115,21 @@ func (a *TsvetokAssembler) Assemble() ([]int, error) {
 	}
 
 	return assembledProgram, nil
+}
+
+func (a *TsvetokAssembler) generateLinesFromOriginalAssembly() []tsvasmLine {
+	commentsPattern := regexp.MustCompile(`(?m)#.*$`)
+	newLines := make([]tsvasmLine, 0)
+
+	noComments := commentsPattern.ReplaceAllLiteralString(a.originalAssembly, "")
+	for lineIndex, line := range strings.Split(noComments, "\n") {
+		trimmedLine := strings.TrimSpace(line)
+		if trimmedLine == "" {
+			continue
+		}
+
+		newLines = append(newLines, tsvasmLine{trimmedLine, lineIndex + 1})
+	}
+
+	return newLines
 }
