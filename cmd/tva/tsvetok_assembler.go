@@ -28,6 +28,9 @@ type instructionBuilder struct {
 	Params []int
 }
 
+
+// setOperation() converts the operation provided to its proper opcode, or returns an error if the operation
+// does not exist
 func (i *instructionBuilder) setOperation(operation string) error {
 	switch operation {
 	case "add":
@@ -51,6 +54,25 @@ func (i *instructionBuilder) setOperation(operation string) error {
 	return nil
 }
 
+// TODO: Make these constant values in tvm package
+var registerValueMap = map[string]int {
+	"r0": 0,
+	"r1": 1,
+	"r2": 2,
+	"r3": 3,
+	"r4": 4,
+	"t0": 5,
+	"t1": 6,
+	"t2": 7,
+	"t3": 8,
+	"t4": 9,
+	"t5": 10,
+	"t6": 11,
+	"t7": 12,
+	"t8": 13,
+	"la": tvm.RegisterLastAddress,
+}
+
 // addParam() adds a parameter to this instruction builder given the string value and where
 // in the instruction it is found. Returns an error if the parameter is malformed
 func (i *instructionBuilder) addParam(paramStr string, paramIndex int) error {
@@ -64,8 +86,13 @@ func (i *instructionBuilder) addParam(paramStr string, paramIndex int) error {
 	} else if strings.Contains(paramStr, "i") || numericPattern.MatchString(paramStr) {
 		paramStr = strings.ReplaceAll(paramStr, "i", "")
 		paramFormat = tvm.ParamFormatImmediate
-	} else if strings.Contains(paramStr, "r") {
-		paramStr = strings.ReplaceAll(paramStr, "r", "")
+	} else if strings.Contains(paramStr, "r") || strings.Contains(paramStr, "t") || paramStr == "la" {
+		registerValue, registerExists := registerValueMap[paramStr]
+		if !registerExists {
+			return fmt.Errorf("invalid register param '%v'", paramStr)
+		}
+
+		paramStr = fmt.Sprintf("%v", registerValue)
 		paramFormat = tvm.ParamFormatRegister
 	} else {
 		return fmt.Errorf("unknown parameter format '%v'", paramStr)

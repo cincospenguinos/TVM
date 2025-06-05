@@ -91,6 +91,8 @@ func TestTsvetokAssembler_HandlesAllRegularInstructionsInImmediateMode(t *testin
 func TestTsvetokAssembler_HandlesAllRegularInstructionsInRegisterMode(t *testing.T) {
 	for _, tc := range []executionTestCase{
 		{"add i2, r0, r0\nadd r0, r0, $0\nhlt", 0, 4, "add supports register mode"},
+		{"mlt i2, i3, r0\nadd r0, r0, $0\nhlt", 0, 12, "mlt supports register mode"},
+		{"in t0\nadd t0, 0, $0\nhlt", 0, -3, "in supports register mode (temporary register)"},
 	} {
 		t.Run(tc.testName, func (t *testing.T) {
 			assembler := NewAssemblerFromString(tc.program)
@@ -100,6 +102,9 @@ func TestTsvetokAssembler_HandlesAllRegularInstructionsInRegisterMode(t *testing
 			machine := tvm.NewTsvetokVirtualMachine(program)
 			mockOutput := &tvm.MockOutputInterface{}
 			machine.SetOutputInterface(mockOutput)
+
+			mockInput := &tvm.MockInputInterface{-3}
+			machine.SetInputInterface(mockInput)
 
 			preExecutionMemory := machine.CopyMemory()
 			require.NoError(t, machine.Execute(), fmt.Sprintf("failed execution (program was %v)", preExecutionMemory))
