@@ -1,6 +1,7 @@
 package tva
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -18,9 +19,34 @@ func NewAssemblerFromString(programStr string) *TsvetokAssembler {
 	return &TsvetokAssembler{programStr}
 }
 
+// instructionBuilder represents a single intcode operation. Use toIntcode() to expand it out to its
+// proper instruction values
 type instructionBuilder struct {
 	OpCode int
 	Params []int
+}
+
+func (i *instructionBuilder) setOperation(operation string) error {
+	switch operation {
+	case "add":
+		i.OpCode = 1
+	case "mlt":
+		i.OpCode = 2
+	case "in":
+		i.OpCode = 3
+	case "out":
+		i.OpCode = 4
+	case "seq":
+		i.OpCode = 5
+	case "jit":
+		i.OpCode = 6
+	case "hlt":
+		i.OpCode = 9
+	default:
+		fmt.Errorf("unknown instruction '%v'", operation)
+	}
+
+	return nil
 }
 
 func (i *instructionBuilder) addParam(paramStr string, paramIndex int) error {
@@ -66,14 +92,6 @@ func (i *instructionBuilder) toIntcode() []int {
 	return intcode
 }
 
-// tsvasmLine is an intermediary struct that represents the original line of assembly code
-// and what line number it originally was in. Keeping the two together allows for better
-// debug information and error reporting
-type tsvasmLine struct {
-	assemblyCode string
-	lineNumber   int
-}
-
 func (a *TsvetokAssembler) Assemble() ([]int, error) {
 	spacesPattern := regexp.MustCompile(`\s+`)
 
@@ -81,33 +99,18 @@ func (a *TsvetokAssembler) Assemble() ([]int, error) {
 	for _, line := range a.generateLinesFromOriginalAssembly() {
 		builder := &instructionBuilder{}
 		chunks := spacesPattern.Split(line.assemblyCode, -1)
-		operation := chunks[0]
 		params := chunks[1:]
 
-		switch operation {
-		case "add":
-			builder.OpCode = 1
-		case "mlt":
-			builder.OpCode = 2
-		case "in":
-			builder.OpCode = 3
-		case "out":
-			builder.OpCode = 4
-		case "seq":
-			builder.OpCode = 5
-		case "jit":
-			builder.OpCode = 6
-		case "hlt":
-			builder.OpCode = 9
-		default:
-			// TODO: Do we want to just gather and report all of the errors instead of stopping assembly at the first one?
-			return []int{}, fmt.Errorf("unknown instruction '%v' on line %v", operation, line.lineNumber)
+		// TODO: Do we want to just gather and report all of the errors instead of stopping assembly at the first one?
+		err := builder.setOperation(chunks[0])
+		if err != nil {
+			return []int{}, errors.Join(err, fmt.Errorf("error on line '%v'", line.lineNumber))
 		}
 
 		for index, paramStr := range params {
 			err := builder.addParam(paramStr, index)
 			if err != nil {
-				return []int{}, err
+				return []int{}, errors.Join(err, fmt.Errorf("error on line '%v'", line.lineNumber))
 			}
 		}
 
@@ -115,6 +118,14 @@ func (a *TsvetokAssembler) Assemble() ([]int, error) {
 	}
 
 	return assembledProgram, nil
+}
+
+// tsvasmLine is an intermediary struct that represents the original line of assembly code
+// and what line number it originally was in. Keeping the two together allows for better
+// debug information and error reporting
+type tsvasmLine struct {
+	assemblyCode string
+	lineNumber   int
 }
 
 func (a *TsvetokAssembler) generateLinesFromOriginalAssembly() []tsvasmLine {
