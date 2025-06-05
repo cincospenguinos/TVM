@@ -55,6 +55,7 @@ func (i *instructionBuilder) addParam(paramStr string, paramIndex int) error {
 	return nil
 }
 
+// toIntcode() returns the sequence of integers that matches the inputs it received
 func (i *instructionBuilder) toIntcode() []int {
 	intcode := []int{i.OpCode}
 
@@ -66,14 +67,22 @@ func (i *instructionBuilder) toIntcode() []int {
 }
 
 func (a *TsvetokAssembler) Assemble() ([]int, error) {
+	commentsPattern := regexp.MustCompile(`(?m)#.*$`)
 	spacesPattern := regexp.MustCompile(`\s+`)
 
 	assembledProgram := make([]int, 0)
-	newLines := strings.Split(a.originalAssembly, "\n")
+
+	noComments := commentsPattern.ReplaceAllLiteralString(a.originalAssembly, "")
+	newLines := strings.Split(noComments, "\n")
 
 	for lineIndex, line := range newLines {
+		trimmedLine := strings.TrimSpace(line)
+		if trimmedLine == "" {
+			continue
+		}
+
 		builder := &instructionBuilder{}
-		chunks := spacesPattern.Split(line, -1)
+		chunks := spacesPattern.Split(trimmedLine, -1)
 		operation := chunks[0]
 		params := chunks[1:]
 

@@ -87,3 +87,17 @@ func TestTsvetokAssembler_HandlesAllRegularInstructionsInImmediateMode(t *testin
 		})
 	}
 }
+
+func TestTsvetokAssembler_IgnoresCommentsSpacesAndTheLike(t *testing.T) {
+	program := `# This is a comment. In Tsvetok Assembly we start comments
+	# with the '#' character. There are no multi-line comments;
+	# only inline comments
+		hlt # this is a comment at the end of the line, which should be ignored
+	`
+
+	assembler := NewAssemblerFromString(program)
+	intcode, err := assembler.Assemble()
+	require.NoError(t, err)
+	require.True(t, len(intcode) > 0)
+	assert.Equal(t, 9, intcode[0])
+}
