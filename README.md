@@ -16,6 +16,8 @@ A TVM reads a sequence of 32-bit integers, decodes them, and executes them.
 * Set-if-equal (opcode `5`)
 * Jump if true (opcode `6`)
 	* Jump always sets the return register if it takes the jump
+* Set-if-less-than (opcode `7`)
+	* Turns out I need it
 * Halt (opcode `9`)
 
 ### Register File
@@ -27,9 +29,9 @@ A TVM reads a sequence of 32-bit integers, decodes them, and executes them.
 The registers are enumerated as follows:
 
 ```
-$r0...$r4 -> 0, 1, 2, 3, 4
-$t0...$t8 -> 5, 6, 7, 8, 9, 10, 11, 12
-$la       -> 13
+r0...r4 -> 0, 1, 2, 3, 4
+t0...t8 -> 5, 6, 7, 8, 9, 10, 11, 12
+la       -> 13
 ```
 
 ### Operation Types
@@ -58,6 +60,7 @@ TVM files are binary files with all bytes in little-endian. They begin with the 
 - [x] All operations support immediate mode
 - [x] All operations support register mode
 	* Actually I'm not sure I want to support register mode yet
+- [ ] Set-less-than instruction
 - [ ] Any memory address that does not exist will immediately exist upon lookup or writing
 	* If we expand memory to fill the space, we set everything inside to 0
 - [ ] Read a TVM binary file and executes it
@@ -84,11 +87,13 @@ Tsvetok assembly files are plain text UTF-8 files and have the following feature
 - [ ] Labels for jumping are supported
 - [ ] Labels for data preservation are supported
 - [x] All operations support immediates
-- [ ] All operations support registers
+- [x] All operations support registers
 - [ ] `jif` pseudo-instruction is supported
 - [ ] `sub` pseudo-instruction is supported
 - [ ] `nil` psuedo-instruction is supported
 	* This sets the underlying value to simply 0 unconditionally
+- [ ] `mov` pseudo-instruction is supported
+	* This copies the source value at the destination (length of three)
 - [x] Comments are removed and ignored
 - [ ] Writes to a TVM binary file with correct syntax
 - [ ] Do we want to do validation in the assembler? I think we do. If there's a semantic error with the execution of the underlying program, the programmer really ought to know.
