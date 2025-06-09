@@ -2,7 +2,7 @@ package virtual_machine
 
 import ()
 
-// setIfLessThanOperation multiplies two numbers together
+// setIfLessThanOperation sets the output parameter to 1 if the first parameter's value is less than the second
 type setIfLessThanOperation struct {
 	*TsvetokVirtualMachine
 }

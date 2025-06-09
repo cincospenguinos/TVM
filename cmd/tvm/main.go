@@ -1,5 +1,10 @@
-package tvm
+package main
 
-import ()
+import (
+	tvm "tvm/internal/virtual_machine"
+)
 
-func main() {}
+func main() {
+	machine := tvm.NewTsvetokVirtualMachine([]int{9})
+	machine.Execute()
+}
