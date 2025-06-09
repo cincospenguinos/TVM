@@ -192,3 +192,12 @@ func TestTsvetokVirtualMachine_SettingLastAddressRegisterReturnsError(t *testing
 	_, isAttemptedLastAddressWriteErr := err.(AttemptedLastAddressWriteErr)
 	assert.True(t, isAttemptedLastAddressWriteErr)
 }
+
+func TestTsvetokVirtualMachine_SetIfLessThanWorks(t *testing.T) {
+	machine := NewTsvetokVirtualMachine([]int{1107, 1, 3, 0, 9})
+	require.NoError(t, machine.Execute())
+
+	val, err := machine.GetValueInMemory(0)
+	require.NoError(t, err)
+	assert.Equal(t, 1, val)
+}
