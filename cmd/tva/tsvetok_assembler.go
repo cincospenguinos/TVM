@@ -21,8 +21,17 @@ func NewAssemblerFromString(programStr string) *TsvetokAssembler {
 // Assemble() munges the original assembly program and returns a sequence of integers executable by
 // a Tsvetok Virtual Machine, or an error if one was discovered or occurrred during assembly.
 func (a *TsvetokAssembler) Assemble() ([]int, error) {
-	assembledProgram := make([]int, 0)
-	for _, line := range a.generateLinesFromOriginalAssembly() {
+	linesOfCode := a.generateLinesFromOriginalAssembly()
+
+	labelExtractor := newLabelExtractor()
+	for _, line := range linesOfCode {
+		if err := labelExtractor.ExtractLabels(line); err != nil {
+			return []int{}, errors.Join(err, fmt.Errorf("error on line '%v'", line.lineNumber))
+		}
+	}
+
+	instructions := make([]*instructionBuilder, 0)
+	for _, line := range linesOfCode {
 		builder := &instructionBuilder{}
 		chunks := line.extractChunks()
 
@@ -39,6 +48,11 @@ func (a *TsvetokAssembler) Assemble() ([]int, error) {
 			}
 		}
 
+		instructions = append(instructions, builder)
+	}
+
+	assembledProgram := make([]int, 0)
+	for _, builder := range instructions {
 		assembledProgram = append(assembledProgram, builder.toIntcode()...)
 	}
 
