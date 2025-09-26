@@ -41,7 +41,6 @@ type instructionBuilder struct {
 	Params []int
 }
 
-
 // setOperation() converts the operation provided to its proper opcode, or returns an error if the operation
 // does not exist
 func (i *instructionBuilder) setOperation(operation string) error {
@@ -61,7 +60,7 @@ func (i *instructionBuilder) setOperation(operation string) error {
 	case "hlt":
 		i.OpCode = 9
 	default:
-		fmt.Errorf("unknown instruction '%v'", operation)
+		return fmt.Errorf("unknown instruction '%v'", operation)
 	}
 
 	return nil
