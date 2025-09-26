@@ -18,6 +18,8 @@ func NewAssemblerFromString(programStr string) *TsvetokAssembler {
 	return &TsvetokAssembler{programStr}
 }
 
+// Assemble() munges the original assembly program and returns a sequence of integers executable by
+// a Tsvetok Virtual Machine, or an error if one was discovered or occurrred during assembly.
 func (a *TsvetokAssembler) Assemble() ([]int, error) {
 	spacesPattern := regexp.MustCompile(`\s+`)
 

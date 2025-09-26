@@ -6,7 +6,7 @@ import (
 
 // AttemptedLastAddressWriteErr indicates that an operation attempted to write to the last address
 // register, which is write protected. Note that the only operation that may write to that register
-// is the jit instruction, which ignores this error
+// is the jit instruction
 type AttemptedLastAddressWriteErr struct{}
 
 func (_ AttemptedLastAddressWriteErr) Error() string {
