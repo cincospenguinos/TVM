@@ -1,6 +1,7 @@
 package tva
 
 import (
+	"regexp"
 	"strings"
 	"fmt"
 	"testing"
@@ -162,12 +163,14 @@ func TestTsvetokAssembler_AcceptsLabelsAsLocationsForJumping(t *testing.T) {
 // two usages of labels: declarations (e.g. `.my-variable 0`) and accessions (e.g. 
 // `add i.my-variable, 1, $.my-variable`)
 type labelExtractor struct {
-	labelsDeclared map[string]tsvasmLine
+	labelsDeclared  map[string]tsvasmLine
+	labelAccessions map[string]tsvasmLine
 }
 
 func newLabelExtractor() (*labelExtractor) {
 	return &labelExtractor{
-		labelsDeclared: make(map[string]tsvasmLine),
+		labelsDeclared:  make(map[string]tsvasmLine),
+		labelAccessions: make(map[string]tsvasmLine),
 	}
 }
 
@@ -188,6 +191,18 @@ func (l* labelExtractor) ExtractLabels(line tsvasmLine) error {
 		return nil
 	}
 
+	labelAccessionPattern := regexp.MustCompile(`[\$i]\.`)
+	chunks := line.extractChunks()
+	params := chunks[1:]
+
+	for _, param := range params {
+		if labelAccessionPattern.MatchString(param) {
+			paramSansComma := strings.ReplaceAll(param, ",", "")
+			labelName := labelAccessionPattern.ReplaceAllLiteralString(paramSansComma, "")
+			l.labelAccessions[labelName] = line
+		}
+	}
+
 	return nil
 }
 
@@ -199,7 +214,8 @@ func (l* labelExtractor) LabelDeclared(labelName string) bool {
 
 // Returns true if the label name provided is used as an accession in the program
 func (l* labelExtractor) LabelAccessed(labelName string) bool {
-	return false
+	_, found := l.labelAccessions[labelName]
+	return found
 }
 
 type labelExtractionTestCase struct{
@@ -211,12 +227,18 @@ type labelExtractionTestCase struct{
 func TestLabelExtractor_ExtractLabelsPullsOutTheCorrectLabels(t *testing.T) {
 	for _, tc := range []labelExtractionTestCase{
 		{".foo", []string{}, "foo"},
+		{"add i.foo, $.foo, $0", []string{"foo"}, ""},
+		{"mlt i.foo, $.bar, $.biz", []string{"foo", "bar", "biz"}, ""},
 	} {
 		line := tsvasmLine{tc.assemblyStr, 12}
 		extractor := newLabelExtractor()
 		require.NoError(t, extractor.ExtractLabels(line))
 
 		assert.Equal(t, tc.expectedLabelDeclared != "", extractor.LabelDeclared(tc.expectedLabelDeclared), "a label was declared but the extractor found none")
+
+		for _, accessedLabel := range tc.expectedLabelsAccessed {
+			assert.True(t, extractor.LabelAccessed(accessedLabel), fmt.Sprintf("'%v' is expected to be accessed", accessedLabel))
+		}
 	}
 }
 
