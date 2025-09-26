@@ -172,15 +172,23 @@ func newLabelExtractor() (*labelExtractor) {
 }
 
 // Extracts labels from a given line of assembly
-func (l* labelExtractor) ExtractLabels(line tsvasmLine) {
+func (l* labelExtractor) ExtractLabels(line tsvasmLine) error {
 	if strings.HasPrefix(line.assemblyCode, ".") {
 		labelName := strings.ReplaceAll(line.assemblyCode, ".", "")
+
+		if l.LabelDeclared(labelName) {
+			line, _ := l.labelsDeclared[labelName]
+
+			// TODO: Extract to separate error struct?
+			return fmt.Errorf("'%v' is already declared on line %v: '%v'", labelName, line.lineNumber, line.assemblyCode)
+		}
+
 		l.labelsDeclared[labelName] = line
 
-		// TODO: If a label is redeclared, we ought to return an error here
-
-		return
+		return nil
 	}
+
+	return nil
 }
 
 // Returns true if the label name provided is declared in the program
@@ -206,8 +214,14 @@ func TestLabelExtractor_ExtractLabelsPullsOutTheCorrectLabels(t *testing.T) {
 	} {
 		line := tsvasmLine{tc.assemblyStr, 12}
 		extractor := newLabelExtractor()
-		extractor.ExtractLabels(line)
+		require.NoError(t, extractor.ExtractLabels(line))
 
 		assert.Equal(t, tc.expectedLabelDeclared != "", extractor.LabelDeclared(tc.expectedLabelDeclared), "a label was declared but the extractor found none")
 	}
+}
+
+func TestLabelExtractor_DoesNotAllowMultipleDeclarationsOfALabel(t *testing.T) {
+	extractor := newLabelExtractor()
+	require.NoError(t, extractor.ExtractLabels(tsvasmLine{".foo", 12}))
+	require.Error(t, extractor.ExtractLabels(tsvasmLine{".foo", 24}))
 }
