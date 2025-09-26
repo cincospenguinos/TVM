@@ -46,7 +46,7 @@ Memory type means "this operand is an address in memory." Immediate type means "
 
 ### File Format
 
-TVM files are binary files with all bytes in little-endian. They begin with the ASCII characters `TVM` after which are sequences of instructions. Four bytes (32 bits) is one word in TVM, and so integers are received and munged in four byte chunks, until the file ends
+TVM files are binary files with all bytes in little-endian. They begin with the ASCII characters `TVM\0` after which are sequences of instructions. Four bytes (32 bits) is one word in TVM, and so integers are received and munged in four byte chunks, until the file ends
 
 ### TODO
 
@@ -60,12 +60,10 @@ TVM files are binary files with all bytes in little-endian. They begin with the 
 - [x] All operations support immediate mode
 - [x] All operations support register mode
 	* Actually I'm not sure I want to support register mode yet
-- [ ] Set-less-than instruction
+- [x] Set-less-than instruction
 - [ ] Any memory address that does not exist will immediately exist upon lookup or writing
 	* If we expand memory to fill the space, we set everything inside to 0
 - [ ] Read a TVM binary file and executes it
-- [ ] Auto expands memory when attempting to access a valid location
-	* If it's past the length of memory, then we can expand it. It would be a nice quality of life feature
 - [ ] Do we want to allow the program counter to be a read-only register by programmers? It'd be a nice quality of life thing (`out pc` could act like a print statement)
 
 ## TVA
