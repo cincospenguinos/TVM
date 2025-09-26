@@ -101,8 +101,12 @@ func (i *instructionBuilder) addParam(paramStr string, paramIndex int) error {
 		return err
 	}
 
-	// TODO: Do we need to respect the index? Like do an insert?
-	i.Params = append(i.Params, paramVal)
+	for len(i.Params) <= paramIndex {
+		i.Params = append(i.Params, 0)
+	}
+
+	copy(i.Params[paramIndex+1:], i.Params[paramIndex:])
+	i.Params[paramIndex] = paramVal
 
 	return nil
 }
