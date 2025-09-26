@@ -69,6 +69,10 @@ func (i *instructionBuilder) setOperation(operation string) error {
 // addParam() adds a parameter to this instruction builder given the string value and where in the instruction it is found.
 // Returns an error if the parameter is malformed
 func (i *instructionBuilder) addParam(paramStr string, paramIndex int) error {
+	if paramIndex < 0 || paramIndex >= 3 {
+		return fmt.Errorf("'%v' is not a valid parameter index (no less than 0; no operation supports more than three)", paramIndex)
+	}
+
 	numericPattern := regexp.MustCompile(`^\d+$`)
 	paramStr = strings.ReplaceAll(paramStr, ",", "")
 

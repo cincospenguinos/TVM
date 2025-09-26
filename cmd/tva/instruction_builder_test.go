@@ -37,16 +37,11 @@ func TestInstructionBuilder_AcceptsValidOpCodesAndRejectsInvalidOnes(t *testing.
 	}
 }
 
-// TODO: addParam but it's a negative index
-// TODO: addParam but it's an index greater than 2
-
-func TestInstructionBuilder_AddParamRejectsMoreThanThreeParams(t *testing.T) {
+func TestInstructionBuilder_RejectsInvalidParamIndexes(t *testing.T) {
 	builder := &instructionBuilder{}
 
-	require.NoError(t, builder.addParam("0", 0))
-	require.NoError(t, builder.addParam("0", 1))
-	require.NoError(t, builder.addParam("0", 2))
 	require.Error(t, builder.addParam("0", 3))
+	require.Error(t, builder.addParam("0", -1))
 }
 
 func TestInstructionBuilder_AddParamRespectsIndex(t *testing.T) {
