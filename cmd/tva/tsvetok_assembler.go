@@ -21,12 +21,10 @@ func NewAssemblerFromString(programStr string) *TsvetokAssembler {
 // Assemble() munges the original assembly program and returns a sequence of integers executable by
 // a Tsvetok Virtual Machine, or an error if one was discovered or occurrred during assembly.
 func (a *TsvetokAssembler) Assemble() ([]int, error) {
-	spacesPattern := regexp.MustCompile(`\s+`)
-
 	assembledProgram := make([]int, 0)
 	for _, line := range a.generateLinesFromOriginalAssembly() {
 		builder := &instructionBuilder{}
-		chunks := spacesPattern.Split(line.assemblyCode, -1)
+		chunks := line.extractChunks()
 
 		// TODO: Do we want to just gather and report all of the errors instead of stopping assembly at the first one?
 		err := builder.setOperation(chunks[0])
@@ -53,6 +51,12 @@ func (a *TsvetokAssembler) Assemble() ([]int, error) {
 type tsvasmLine struct {
 	assemblyCode string
 	lineNumber   int
+}
+
+// extractChunks returns each piece string in a line separated by one or more space characters
+func (l tsvasmLine) extractChunks() []string {
+	spacesPattern := regexp.MustCompile(`\s+`)
+	return spacesPattern.Split(l.assemblyCode, -1)
 }
 
 // generateLinesFromOriginalAssembly() is a helper function to convert all lines out to a POJO struct.
