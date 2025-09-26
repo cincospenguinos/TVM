@@ -1,6 +1,7 @@
 package tva
 
 import (
+	"strings"
 	"fmt"
 	"testing"
 
@@ -132,4 +133,81 @@ func TestTsvetokAssembler_IgnoresCommentsSpacesAndTheLike(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, len(intcode) > 0)
 	assert.Equal(t, 9, intcode[0])
+}
+
+func TestTsvetokAssembler_AcceptsLabelsAsLocationsForJumping(t *testing.T) {
+	t.Skip("TODO: This is an integration heavy test")
+	assemblyStr := `
+		jit 1, i.end
+		add 0, 0, $0
+	.end
+		hlt
+	`
+
+	assembler := NewAssemblerFromString(assemblyStr)
+	program, err := assembler.Assemble()
+	require.NoError(t, err)
+
+	machine := tvm.NewTsvetokVirtualMachine(program)
+	err = machine.Execute()
+	require.NoError(t, err)
+
+	memory := machine.CopyMemory()
+	assert.NotEqual(t, 0, memory[0])
+}
+
+// labelExtractor is a helper object that extracts labels from a provided line of assembly
+// code, keeping track of what original line number it was either declared or used, and is
+// to be used to supply correct indexing information at assembly time. Note that there are
+// two usages of labels: declarations (e.g. `.my-variable 0`) and accessions (e.g. 
+// `add i.my-variable, 1, $.my-variable`)
+type labelExtractor struct {
+	labelsDeclared map[string]tsvasmLine
+}
+
+func newLabelExtractor() (*labelExtractor) {
+	return &labelExtractor{
+		labelsDeclared: make(map[string]tsvasmLine),
+	}
+}
+
+// Extracts labels from a given line of assembly
+func (l* labelExtractor) ExtractLabels(line tsvasmLine) {
+	if strings.HasPrefix(line.assemblyCode, ".") {
+		labelName := strings.ReplaceAll(line.assemblyCode, ".", "")
+		l.labelsDeclared[labelName] = line
+
+		// TODO: If a label is redeclared, we ought to return an error here
+
+		return
+	}
+}
+
+// Returns true if the label name provided is declared in the program
+func (l* labelExtractor) LabelDeclared(labelName string) bool {
+	_, found := l.labelsDeclared[labelName]
+	return found
+}
+
+// Returns true if the label name provided is used as an accession in the program
+func (l* labelExtractor) LabelAccessed(labelName string) bool {
+	return false
+}
+
+type labelExtractionTestCase struct{
+	assemblyStr            string
+	expectedLabelsAccessed []string
+	expectedLabelDeclared  string
+}
+
+func TestLabelExtractor_ExtractLabelsPullsOutTheCorrectLabels(t *testing.T) {
+	for _, tc := range []labelExtractionTestCase{
+		{".foo", []string{}, "foo"},
+	} {
+		line := tsvasmLine{tc.assemblyStr, 12}
+		extractor := newLabelExtractor()
+		extractor.ExtractLabels(line)
+
+		assert.Equal(t, tc.expectedLabelDeclared != "", extractor.LabelDeclared(tc.expectedLabelDeclared), "a label was declared but the extractor found none")
+	}
 }
