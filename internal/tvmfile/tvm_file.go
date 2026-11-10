@@ -7,6 +7,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
+	"os"
 )
 
 // magic is the four-byte ASCII prefix that identifies a TVM binary file
@@ -51,12 +52,31 @@ func Encode(program []int) ([]byte, error) {
 	return out, nil
 }
 
-// ReadFile reads and decodes the TVM binary file at the given path
+// ReadFile reads the TVM binary file at the given path and decodes it
 func ReadFile(path string) ([]int, error) {
-	return nil, fmt.Errorf("not implemented")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	words, err := Decode(data)
+	if err != nil {
+		return nil, fmt.Errorf("reading %v: %w", path, err)
+	}
+
+	return words, nil
 }
 
 // WriteFile encodes the given program and writes it to the given path
 func WriteFile(path string, program []int) error {
-	return fmt.Errorf("not implemented")
+	data, err := Encode(program)
+	if err != nil {
+		return err
+	}
+
+	if err := os.WriteFile(path, data, 0o644); err != nil {
+		return fmt.Errorf("writing %v: %w", path, err)
+	}
+
+	return nil
 }
