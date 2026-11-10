@@ -1,6 +1,6 @@
 # Auto-Expanding Memory
 
-**Status:** Not started
+**Status:** Done (all steps committed)
 **Source:** README TODO — "Any memory address that does not exist will immediately exist upon lookup or writing. If we expand memory to fill the space, we set everything inside to 0."
 
 ## Spec
@@ -23,7 +23,7 @@ Verified green before starting (commit `b51bfca`): `go build ./...`, `go test ./
 |---|---|
 | `internal/virtual_machine/tsvetok_virtual_machine.go` | New unexported helper `expandMemory(address int)`; rework `GetValueInMemory` and `SetValueInMemory` to reject only negative addresses, then `expandMemory` before accessing. Error messages reworded for the remaining negative-only case (no test asserts the old strings — verified). |
 | `internal/virtual_machine/tsvetok_virtual_machine_test.go` | All new tests (Steps 0–5). |
-| `cmd/tva/tsvetok_assembler_test.go` | Optional: one seam test (Step 5b). |
+| `cmd/tva/tsvetok_assembler_test.go` | One seam test (Step 5b). |
 | `AGENTS.md` | Rewrite the stale gotcha "memory does not auto-expand (open README TODO)" to describe the new semantics. |
 | `README.md` | Check off the TODO on line 63. |
 
@@ -44,7 +44,7 @@ Each step is a small, single-purpose commit matching the repo's existing commit 
 
 The rework must not let negative addresses through. Pin the current behavior first (this test is green immediately — it's a guardrail, not red-first).
 
-- [ ] Add to `internal/virtual_machine/tsvetok_virtual_machine_test.go`:
+- [x] Add to `internal/virtual_machine/tsvetok_virtual_machine_test.go`:
 
 ```go
 func TestTsvetokVirtualMachine_NegativeMemoryAddressesError(t *testing.T) {
@@ -65,11 +65,11 @@ func TestTsvetokVirtualMachine_NegativeMemoryAddressesError(t *testing.T) {
 }
 ```
 
-- [ ] Commit: `Add tests for negative memory addresses`
+- [x] Commit: `Add tests for negative memory addresses`
 
 ### Step 1 — Writes expand (RED)
 
-- [ ] Add:
+- [x] Add:
 
 ```go
 func TestTsvetokVirtualMachine_ExpandsMemoryOnOutOfBoundsWrite(t *testing.T) {
@@ -107,12 +107,12 @@ func TestTsvetokVirtualMachine_WritesToExistingMemoryDoNotGrowIt(t *testing.T) {
 }
 ```
 
-- [ ] Confirm red: `go test ./internal/virtual_machine/ -run 'ExpandsMemoryOnOutOfBoundsWrite|WritesToExistingMemoryDoNotGrowIt' -v` fails (the OOB write currently returns an error).
-- [ ] Commit: `Add tests for out-of-bounds memory writes`
+- [x] Confirm red: `go test ./internal/virtual_machine/ -run 'ExpandsMemoryOnOutOfBoundsWrite|WritesToExistingMemoryDoNotGrowIt' -v` fails (the OOB write currently returns an error).
+- [x] Commit: `Add tests for out-of-bounds memory writes`
 
 ### Step 2 — Writes expand (GREEN)
 
-- [ ] In `internal/virtual_machine/tsvetok_virtual_machine.go`, add the helper and rework the write path:
+- [x] In `internal/virtual_machine/tsvetok_virtual_machine.go`, add the helper and rework the write path:
 
 ```go
 // expandMemory grows t.memory so the given address is in bounds, zero-filling all newly
@@ -141,12 +141,12 @@ func (t *TsvetokVirtualMachine) SetValueInMemory(address, value int) error {
 
   (The error message is reworded from "…(memory is of size …)" because the size-based failure no longer exists. No test asserts the old text.)
 
-- [ ] Green: `go test ./internal/virtual_machine/ -v` — the Step 1 tests pass; the Step 0 guardrail still passes; full `go test ./...` green.
-- [ ] Commit: `Expand memory on out-of-bounds write`
+- [x] Green: `go test ./internal/virtual_machine/ -v` — the Step 1 tests pass; the Step 0 guardrail still passes; full `go test ./...` green.
+- [x] Commit: `Expand memory on out-of-bounds write`
 
 ### Step 3 — Reads expand (RED)
 
-- [ ] Add:
+- [x] Add:
 
 ```go
 func TestTsvetokVirtualMachine_ExpandsMemoryOnOutOfBoundsRead(t *testing.T) {
@@ -166,12 +166,12 @@ func TestTsvetokVirtualMachine_ExpandsMemoryOnOutOfBoundsRead(t *testing.T) {
 }
 ```
 
-- [ ] Confirm red: `go test ./internal/virtual_machine/ -run ExpandsMemoryOnOutOfBoundsRead -v` fails (the OOB read currently returns an error).
-- [ ] Commit: `Add tests for out-of-bounds memory reads`
+- [x] Confirm red: `go test ./internal/virtual_machine/ -run ExpandsMemoryOnOutOfBoundsRead -v` fails (the OOB read currently returns an error).
+- [x] Commit: `Add tests for out-of-bounds memory reads`
 
 ### Step 4 — Reads expand (GREEN)
 
-- [ ] Rework the read path in `internal/virtual_machine/tsvetok_virtual_machine.go`:
+- [x] Rework the read path in `internal/virtual_machine/tsvetok_virtual_machine.go`:
 
 ```go
 func (t *TsvetokVirtualMachine) GetValueInMemory(address int) (int, error) {
@@ -184,12 +184,12 @@ func (t *TsvetokVirtualMachine) GetValueInMemory(address int) (int, error) {
 }
 ```
 
-- [ ] Green: full `go test ./...` + `go vet ./...` + `gofmt -l .` clean.
-- [ ] Commit: `Expand memory on out-of-bounds read`
+- [x] Green: full `go test ./...` + `go vet ./...` + `gofmt -l .` clean.
+- [x] Commit: `Expand memory on out-of-bounds read`
 
 ### Step 5 — Your exact scenario, end-to-end (GREEN — anchors the feature)
 
-- [ ] Add to `internal/virtual_machine/tsvetok_virtual_machine_test.go`:
+- [x] Add to `internal/virtual_machine/tsvetok_virtual_machine_test.go`:
 
 ```go
 func TestTsvetokVirtualMachine_StoresToMemoryFarBeyondTheProgram(t *testing.T) {
@@ -208,13 +208,13 @@ func TestTsvetokVirtualMachine_StoresToMemoryFarBeyondTheProgram(t *testing.T) {
 }
 ```
 
-- [ ] Commit: `Add end-to-end test for storing far beyond the program`
+- [x] Commit: `Add end-to-end test for storing far beyond the program`
 
 #### Step 5b — Assembler seam
 
 Covers assembler → VM integration. Verified against `instruction_builder.go`: bare digits are immediates, `$` is address mode, so this encodes to `[1101, 5, 5, 100, 9]`.
 
-- [ ] Add to `cmd/tva/tsvetok_assembler_test.go`:
+- [x] Add to `cmd/tva/tsvetok_assembler_test.go`:
 
 ```go
 func TestTsvetokAssembler_StoringFarBeyondTheProgramExpandsMemory(t *testing.T) {
@@ -232,11 +232,11 @@ func TestTsvetokAssembler_StoringFarBeyondTheProgramExpandsMemory(t *testing.T) 
 }
 ```
 
-- [ ] Commit: `Add assembler test for storing far beyond the program`
+- [x] Commit: `Add assembler test for storing far beyond the program`
 
 ### Step 6 — Docs
 
-- [ ] Rewrite the AGENTS.md gotcha. Current:
+- [x] Rewrite the AGENTS.md gotcha. Current:
 
   > VM memory is exactly the `[]int` passed to `NewTsvetokVirtualMachine`. Out-of-bounds read/write returns an error; memory does not auto-expand (open README TODO).
 
@@ -244,8 +244,8 @@ func TestTsvetokAssembler_StoringFarBeyondTheProgramExpandsMemory(t *testing.T) 
 
   > VM memory starts as the `[]int` passed to `NewTsvetokVirtualMachine`. Any read or write to a non-existent (non-negative) address immediately creates it, zero-filled; the memory slice grows exactly to `address+1`. Negative addresses return an error. The register file does *not* expand.
 
-- [ ] Check off the README TODO (line 63): `- [ ]` → `- [x]` (keep the sub-bullet; it now describes implemented behavior).
-- [ ] Commit: `Update README and AGENTS.md for auto-expanding memory`
+- [x] Check off the README TODO (line 63): `- [ ]` → `- [x]` (keep the sub-bullet; it now describes implemented behavior).
+- [x] Commit: `Update README and AGENTS.md for auto-expanding memory`
 
 ## Final gate
 
