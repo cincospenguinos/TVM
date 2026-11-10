@@ -120,6 +120,20 @@ func TestTsvetokAssembler_HandlesAllRegularInstructionsInRegisterMode(t *testing
 	}
 }
 
+func TestTsvetokAssembler_StoringFarBeyondTheProgramExpandsMemory(t *testing.T) {
+	assembler := NewAssemblerFromString("add 5, 5, $100\nhlt")
+	program, err := assembler.Assemble()
+	require.NoError(t, err)
+	assert.Equal(t, []int{1101, 5, 5, 100, 9}, program)
+
+	machine := tvm.NewTsvetokVirtualMachine(program)
+	require.NoError(t, machine.Execute())
+
+	memory := machine.CopyMemory()
+	assert.Len(t, memory, 101)
+	assert.Equal(t, 10, memory[100])
+}
+
 func TestTsvetokAssembler_IgnoresCommentsSpacesAndTheLike(t *testing.T) {
 	program := `# This is a comment. In Tsvetok Assembly we start comments
 	# with the '#' character. There are no multi-line comments;
