@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+
+	"tvm/internal/tvmfile"
 )
 
 func main() {
@@ -19,5 +21,22 @@ func run(stdin io.Reader, stdout, stderr io.Writer, args []string) int {
 		return 2
 	}
 
-	return 1 // TODO: assemble and write the program file
+	source, err := os.ReadFile(args[0])
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+
+	program, err := NewAssemblerFromString(string(source)).Assemble()
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+
+	if err := tvmfile.WriteFile(args[1], program); err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+
+	return 0
 }
