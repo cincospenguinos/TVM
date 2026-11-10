@@ -121,12 +121,16 @@ func (t *TsvetokVirtualMachine) getMemory() []int {
 	return t.memory
 }
 
+// GetValueInMemory returns the value stored at the given address. Any non-negative address that
+// does not yet exist in memory immediately exists upon lookup; it is created, zero-filled, and
+// returned. Negative addresses return an error
 func (t *TsvetokVirtualMachine) GetValueInMemory(address int) (int, error) {
-	if address >= 0 && address < len(t.memory) {
-		return t.memory[address], nil
+	if address < 0 {
+		return -1, fmt.Errorf("cannot lookup memory at negative address '%v'", address)
 	}
 
-	return -1, fmt.Errorf("cannot lookup memory at address '%v' (memory is of size '%v')", address, len(t.memory))
+	t.expandMemory(address)
+	return t.memory[address], nil
 }
 
 // expandMemory grows t.memory so the given address is in bounds, zero-filling all newly
