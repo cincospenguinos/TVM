@@ -129,13 +129,30 @@ func (t *TsvetokVirtualMachine) GetValueInMemory(address int) (int, error) {
 	return -1, fmt.Errorf("cannot lookup memory at address '%v' (memory is of size '%v')", address, len(t.memory))
 }
 
-func (t *TsvetokVirtualMachine) SetValueInMemory(address, value int) error {
-	if address >= 0 && address < len(t.memory) {
-		t.memory[address] = value
-		return nil
+// expandMemory grows t.memory so the given address is in bounds, zero-filling all newly
+// created entries. It is a no-op if the address already exists. It does not validate the
+// address; callers are responsible for rejecting negative addresses
+func (t *TsvetokVirtualMachine) expandMemory(address int) {
+	if address < len(t.memory) {
+		return
 	}
 
-	return fmt.Errorf("cannot write to memory at address '%v' (memory is of size '%v')", address, len(t.memory))
+	expanded := make([]int, address+1)
+	copy(expanded, t.memory)
+	t.memory = expanded
+}
+
+// SetValueInMemory stores the given value at the given address. Any non-negative address that
+// does not yet exist in memory immediately exists upon writing; the memory is expanded to
+// include it, zero-filling the new entries. Negative addresses return an error
+func (t *TsvetokVirtualMachine) SetValueInMemory(address, value int) error {
+	if address < 0 {
+		return fmt.Errorf("cannot write to memory at negative address '%v'", address)
+	}
+
+	t.expandMemory(address)
+	t.memory[address] = value
+	return nil
 }
 
 func (t *TsvetokVirtualMachine) GetValueInRegisterFile(address int) (int, error) {
