@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"math"
 )
 
 // magic is the four-byte ASCII prefix that identifies a TVM binary file
@@ -32,9 +33,22 @@ func Decode(data []byte) ([]int, error) {
 	return words, nil
 }
 
-// Encode encodes a sequence of words as a TVM binary blob
+// Encode encodes a sequence of words as a TVM binary blob: the magic bytes followed
+// by each word as a little-endian signed 32-bit integer. Words outside the signed
+// 32-bit range return an error
 func Encode(program []int) ([]byte, error) {
-	return nil, fmt.Errorf("not implemented")
+	out := make([]byte, len(magic)+4*len(program))
+	copy(out, magic)
+
+	for i, word := range program {
+		if word < math.MinInt32 || word > math.MaxInt32 {
+			return nil, fmt.Errorf("word %v (%v) does not fit in a signed 32-bit integer", i, word)
+		}
+
+		binary.LittleEndian.PutUint32(out[len(magic)+4*i:], uint32(int32(word)))
+	}
+
+	return out, nil
 }
 
 // ReadFile reads and decodes the TVM binary file at the given path
