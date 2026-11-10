@@ -1,8 +1,11 @@
 package virtual_machine
 
-import ()
+import (
+	"fmt"
+)
 
-// inputOperation multiplies two numbers together
+// inputOperation reads a number from the machine's input interface and stores it at the
+// location provided by the first parameter
 type inputOperation struct {
 	*TsvetokVirtualMachine
 }
@@ -12,6 +15,10 @@ func newInputOperation(t *TsvetokVirtualMachine) inputOperation {
 }
 
 func (m inputOperation) Execute() error {
+	if m.InputInterface == nil {
+		return fmt.Errorf("no input interface set on the machine (use SetInputInterface)")
+	}
+
 	address, err := m.getFirstParam()
 	if err != nil {
 		return err
