@@ -1,9 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"os"
+
+	"tvm/internal/tvmfile"
+	tvm "tvm/internal/virtual_machine"
 )
 
 func main() {
@@ -18,5 +22,20 @@ func run(stdin io.Reader, stdout, stderr io.Writer, args []string) int {
 		return 2
 	}
 
-	return 1 // TODO: load and execute the program file
+	program, err := tvmfile.ReadFile(args[0])
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+
+	machine := tvm.NewTsvetokVirtualMachine(program)
+	machine.SetInputInterface(&stdinInput{scanner: bufio.NewScanner(stdin)})
+	machine.SetOutputInterface(&stdoutOutput{writer: stdout})
+
+	if err := machine.Execute(); err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+
+	return 0
 }
