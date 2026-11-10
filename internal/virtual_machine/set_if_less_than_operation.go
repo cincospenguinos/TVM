@@ -46,4 +46,3 @@ func (m setIfLessThanOperation) Execute() error {
 func (m setIfLessThanOperation) GetNextProgramCounter() int { return m.getProgramCounter() + 4 }
 
 func (_ setIfLessThanOperation) Halt() bool { return false }
-

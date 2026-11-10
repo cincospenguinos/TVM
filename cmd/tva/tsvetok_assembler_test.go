@@ -94,7 +94,7 @@ func TestTsvetokAssembler_HandlesAllRegularInstructionsInRegisterMode(t *testing
 		{"mlt i2, i3, r0\nadd r0, r0, $0\nhlt", 0, 12, "mlt supports register mode"},
 		{"in t0\nadd t0, 0, $0\nhlt", 0, -3, "in supports register mode (temporary register)"},
 	} {
-		t.Run(tc.testName, func (t *testing.T) {
+		t.Run(tc.testName, func(t *testing.T) {
 			assembler := NewAssemblerFromString(tc.program)
 			program, err := assembler.Assemble()
 			require.NoError(t, err)

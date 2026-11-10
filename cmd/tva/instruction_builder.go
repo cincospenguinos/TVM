@@ -3,21 +3,21 @@ package main
 import (
 	"fmt"
 	"regexp"
-	"strings"
 	"strconv"
+	"strings"
 
 	tvm "tvm/internal/virtual_machine"
 )
 
 const (
-	ParamIndicatorReservedRegister = "r"
+	ParamIndicatorReservedRegister  = "r"
 	ParamIndicatorTemporaryRegister = "t"
-	ParamIndicatorMemoryAddress = "$"
-	ParamIndicatorImmediate = "i"
-	ParamLastAddressRegister = "la"
+	ParamIndicatorMemoryAddress     = "$"
+	ParamIndicatorImmediate         = "i"
+	ParamLastAddressRegister        = "la"
 )
 
-var registerValueMap = map[string]int {
+var registerValueMap = map[string]int{
 	"r0": tvm.RegisterReserved0,
 	"r1": tvm.RegisterReserved1,
 	"r2": tvm.RegisterReserved2,

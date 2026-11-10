@@ -9,12 +9,12 @@ import (
 )
 
 func TestInstructionBuilder_AcceptsValidOpCodesAndRejectsInvalidOnes(t *testing.T) {
-	type builderOpCodeTestCase struct{
+	type builderOpCodeTestCase struct {
 		opCode  string
 		isValid bool
 	}
 
-	for _, tc := range []builderOpCodeTestCase {
+	for _, tc := range []builderOpCodeTestCase{
 		{"add", true},
 		{"mlt", true},
 		{"seq", true},
