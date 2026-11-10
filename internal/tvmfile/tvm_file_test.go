@@ -1,6 +1,8 @@
 package tvmfile
 
 import (
+	"fmt"
+	"math"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -59,6 +61,82 @@ func TestDecode(t *testing.T) {
 
 			require.NoError(t, err)
 			assert.Equal(t, tc.wantWords, words)
+		})
+	}
+}
+
+func TestEncode(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		program     []int
+		wantBytes   []byte
+		wantErrPart string
+	}{
+		{
+			name:      "single word",
+			program:   []int{9},
+			wantBytes: append(append([]byte{}, testMagic...), 9, 0, 0, 0),
+		},
+		{
+			name:      "empty program is just the magic",
+			program:   []int{},
+			wantBytes: append([]byte{}, testMagic...),
+		},
+		{
+			name:      "negative word is two's complement",
+			program:   []int{-1},
+			wantBytes: append(append([]byte{}, testMagic...), 0xFF, 0xFF, 0xFF, 0xFF),
+		},
+		{
+			name:      "maximum word",
+			program:   []int{math.MaxInt32},
+			wantBytes: append(append([]byte{}, testMagic...), 0xFF, 0xFF, 0xFF, 0x7F),
+		},
+		{
+			name:      "minimum word",
+			program:   []int{math.MinInt32},
+			wantBytes: append(append([]byte{}, testMagic...), 0x00, 0x00, 0x00, 0x80),
+		},
+		{
+			name:        "word above the maximum errors",
+			program:     []int{1 << 31},
+			wantErrPart: "32-bit",
+		},
+		{
+			name:        "word below the minimum errors",
+			program:     []int{math.MinInt32 - 1},
+			wantErrPart: "32-bit",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			data, err := Encode(tc.program)
+
+			if tc.wantErrPart != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tc.wantErrPart)
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tc.wantBytes, data)
+		})
+	}
+}
+
+func TestEncodeDecodeRoundTrip(t *testing.T) {
+	for _, program := range [][]int{
+		{},
+		{9},
+		{1101, 5, 5, 10, 9},
+		{-1, 0, 1, math.MaxInt32, math.MinInt32},
+	} {
+		t.Run(fmt.Sprintf("%v", program), func(t *testing.T) {
+			data, err := Encode(program)
+			require.NoError(t, err)
+
+			words, err := Decode(data)
+			require.NoError(t, err)
+			assert.Equal(t, program, words)
 		})
 	}
 }
