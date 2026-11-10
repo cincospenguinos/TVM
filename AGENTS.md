@@ -21,7 +21,7 @@ Tsvetok Virtual Machine (TVM): an educational Go project written for the owner's
 - Import the VM as `tvm/internal/virtual_machine` (module name is `tvm`), not the GitHub path.
 - `cmd/tva`'s main is a stub printing hello world; the assembler is consumed as a library: `NewAssemblerFromString(src).Assemble() → ([]int, error)`.
 - `cmd/tvm/main.go` is a stub that hardcodes `[]int{9}` (halt); it does not read a TVM file.
-- VM memory is exactly the `[]int` passed to `NewTsvetokVirtualMachine`. Out-of-bounds read/write returns an error; memory does not auto-expand (open README TODO).
+- VM memory starts as the `[]int` passed to `NewTsvetokVirtualMachine`. Any read or write to a non-existent (non-negative) address immediately creates it, zero-filled; the memory slice grows exactly to `address+1`. Negative addresses return an error. The register file does *not* expand.
 - `in`/`out` return an error if the machine has no input/output interface set. Tests should set `MockInputInterface` / `MockOutputInterface` from `mocks.go` first.
 - Intcode is decimal-digit encoded: the lowest two digits are the opcode, and each higher digit is a parameter format — 0=address, 1=immediate, 2=register.
 - The register file is fixed at 14 registers: r0–r4 (reserved, preserved across jumps), t0–t7 (temporaries), `la`=13 (write-protected; only `jit` writes it, and only when the jump is taken). Writing it returns `AttemptedLastAddressWriteErr`.
