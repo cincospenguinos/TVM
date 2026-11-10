@@ -61,7 +61,7 @@ TVM files are binary files with all bytes in little-endian. They begin with the 
 - [x] All operations support register mode
 - [x] Set-less-than instruction
 - [x] Any memory address that does not exist will immediately exist upon lookup or writing
-- [ ] Read a TVM binary file and executes it
+- [x] Read a TVM binary file and executes it
 - [ ] Do we want to allow the program counter to be a read-only register by programmers? It'd be a nice quality of life thing (`out pc` could act like a print statement)
 
 ## TVA
@@ -92,7 +92,7 @@ Tsvetok assembly files are plain text UTF-8 files and have the following feature
 - [ ] `mov` pseudo-instruction is supported
 	* This copies the source value at the destination (length of three)
 - [x] Comments are removed and ignored
-- [ ] Writes to a TVM binary file with correct syntax
+- [x] Writes to a TVM binary file with correct syntax
 - [ ] Do we want to do validation in the assembler? I think we do. If there's a semantic error with the execution of the underlying program, the programmer really ought to know.
 
 ## Tsvetalk

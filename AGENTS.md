@@ -26,7 +26,7 @@ Tsvetok Virtual Machine (TVM): an educational Go project written for the owner's
 - Intcode is decimal-digit encoded: the lowest two digits are the opcode, and each higher digit is a parameter format — 0=address, 1=immediate, 2=register.
 - The register file is fixed at 14 registers: r0–r4 (reserved, preserved across jumps), t0–t7 (temporaries), `la`=13 (write-protected; only `jit` writes it, and only when the jump is taken). Writing it returns `AttemptedLastAddressWriteErr`.
 - Labels: the assembler extracts declarations/accessions (`label_extractor.go`) but never resolves them — assembling any label line fails with a strconv error. The one `t.Skip`ed test covers this; don't unskip it.
-- Planned TVM binary format (README): little-endian 32-bit words prefixed with the ASCII magic `TVM\0`. File I/O is unimplemented on both the assembler and VM sides.
+- TVM binary files: `internal/tvmfile` encodes/decodes them — ASCII magic `TVM\0` followed by little-endian signed 32-bit words. `cmd/tvm` runs `.tvm` files and `cmd/tva` writes them. Binary test fixtures live in `test_data/` (read-only ground truth; test output goes to temp dirs).
 
 ## Conventions
 
