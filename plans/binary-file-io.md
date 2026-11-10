@@ -1,6 +1,6 @@
 # Binary File I/O
 
-**Status:** Not started
+**Status:** Done (all steps committed)
 **Source:** README "File Format" section — *"TVM files are binary files with all bytes in little-endian. They begin with the ASCII characters `TVM\0` after which are sequences of instructions. Four bytes (32 bits) is one word in TVM, and so integers are received and munged in four byte chunks, until the file ends"* — plus the two TODOs it leaves open: line 64 (TVM) *Read a TVM binary file and execute it* and line 95 (TVA) *Writes to a TVM binary file with correct syntax*.
 
 ## Decisions (from plan review)
@@ -11,6 +11,15 @@
 4. **`in` returns 0 on EOF or unparseable input** — the `InputInterface` cannot carry an error, so this is the documented lenient default. Confirmed.
 5. **Codec before fixtures.** The `internal/tvmfile` package is built and tested (with in-memory bytes) before any fixture files exist.
 6. **Nine fixtures** per the table below — tentative; revisit if the set proves awkward.
+
+## Deviations from this document (as implemented)
+
+Four of the snippets above did not survive contact with the toolchain or the repo layout; the committed code fixed them:
+
+1. **`\0` is not a valid Go escape** — the Go 1.27 scanner requires 3-digit octal escapes, so the Go string literals use `\x00` instead (identical bytes). The shell `printf` commands in Step 9 are unaffected (printf octal is a different beast).
+2. **`TestEncode` boundary literals were transposed** — the committed tests expect `ff ff ff 7f` for `math.MaxInt32` and `00 00 00 80` for `math.MinInt32` (the true little-endian bytes).
+3. **`fixturePath` needs `../..`** — `internal/tvmfile` is two levels below the repo root, so one `..` landed in the nonexistent `internal/test_data/`.
+4. **The tva "missing input file" case needs an `outputRelPath`** — with only one argument, `run` hits the usage check (exit 2) and never reaches the load step, so the case as written could never have gone green.
 
 ## Spec
 
@@ -76,7 +85,7 @@ Each step is a small, single-purpose commit: red tests first, then the implement
 
 #### Step 1 — Package skeleton
 
-- [ ] Create `internal/tvmfile/tvm_file.go` with the package doc comment and four stubs (the `magic` var lands with Step 3, not here):
+- [x] Create `internal/tvmfile/tvm_file.go` with the package doc comment and four stubs (the `magic` var lands with Step 3, not here):
 
 ```go
 // Package tvmfile reads and writes TVM binary files. A TVM file begins with the four
@@ -108,15 +117,15 @@ func WriteFile(path string, program []int) error {
 }
 ```
 
-- [ ] Gate green (`go build ./...` etc.).
-- [ ] Commit: `Add tvmfile package skeleton`
+- [x] Gate green (`go build ./...` etc.).
+- [x] Commit: `Add tvmfile package skeleton`
 
 #### Step 2 — Decode (RED)
 
-- [ ] Create `internal/tvmfile/tvm_file_test.go` with an in-memory `TestDecode` (no fixtures yet — the blobs are built from literals, so the test's ground truth is independent of `Encode`):
+- [x] Create `internal/tvmfile/tvm_file_test.go` with an in-memory `TestDecode` (no fixtures yet — the blobs are built from literals, so the test's ground truth is independent of `Encode`):
 
 ```go
-var testMagic = []byte("TVM\0")
+var testMagic = []byte("TVM\x00")
 
 func TestDecode(t *testing.T) {
 	for _, tc := range []struct {
@@ -132,7 +141,7 @@ func TestDecode(t *testing.T) {
 		},
 		{
 			name:        "bad magic",
-			data:        []byte("XVM\0\x09\x00\x00\x00"),
+			data:        []byte("XVM\x00\x09\x00\x00\x00"),
 			wantErrPart: "magic",
 		},
 		{
@@ -172,16 +181,16 @@ func TestDecode(t *testing.T) {
 }
 ```
 
-- [ ] Confirm red: `go test ./internal/tvmfile/ -run TestDecode -v` — every subtest fails with "not implemented."
-- [ ] Commit: `Add tests for decoding TVM binaries`
+- [x] Confirm red: `go test ./internal/tvmfile/ -run TestDecode -v` — every subtest fails with "not implemented."
+- [x] Commit: `Add tests for decoding TVM binaries`
 
 #### Step 3 — Decode (GREEN)
 
-- [ ] Implement in `tvm_file.go` (add `bytes` and `encoding/binary` imports):
+- [x] Implement in `tvm_file.go` (add `bytes` and `encoding/binary` imports):
 
 ```go
 // magic is the four-byte ASCII prefix that identifies a TVM binary file
-var magic = []byte("TVM\0")
+var magic = []byte("TVM\x00")
 
 // Decode decodes a TVM binary blob into the sequence of words it contains. The blob
 // must begin with the TVM magic bytes, and the remaining bytes must form whole
@@ -205,12 +214,12 @@ func Decode(data []byte) ([]int, error) {
 }
 ```
 
-- [ ] Green: `go test ./internal/tvmfile/ -v` + full gate.
-- [ ] Commit: `Decode TVM binary files` (body bullets: magic prefix check; multiple-of-4 check; sign-extended little-endian word loop)
+- [x] Green: `go test ./internal/tvmfile/ -v` + full gate.
+- [x] Commit: `Decode TVM binary files` (body bullets: magic prefix check; multiple-of-4 check; sign-extended little-endian word loop)
 
 #### Step 4 — Encode (RED)
 
-- [ ] Add to `tvm_file_test.go` (the byte literals are the ground truth; the round-trip test is corroborating):
+- [x] Add to `tvm_file_test.go` (the byte literals are the ground truth; the round-trip test is corroborating):
 
 ```go
 func TestEncode(t *testing.T) {
@@ -238,12 +247,12 @@ func TestEncode(t *testing.T) {
 		{
 			name:      "maximum word",
 			program:   []int{math.MaxInt32},
-			wantBytes: append(append([]byte{}, testMagic...), 0xFF, 0xFF, 0x7F, 0x7F),
+			wantBytes: append(append([]byte{}, testMagic...), 0xFF, 0xFF, 0xFF, 0x7F),
 		},
 		{
 			name:      "minimum word",
 			program:   []int{math.MinInt32},
-			wantBytes: append(append([]byte{}, testMagic...), 0x00, 0x00, 0x80, 0x7F),
+			wantBytes: append(append([]byte{}, testMagic...), 0x00, 0x00, 0x00, 0x80),
 		},
 		{
 			name:        "word above the maximum errors",
@@ -290,12 +299,12 @@ func TestEncodeDecodeRoundTrip(t *testing.T) {
 }
 ```
 
-- [ ] Confirm red: `go test ./internal/tvmfile/ -run 'TestEncode|RoundTrip' -v` — all fail with "not implemented."
-- [ ] Commit: `Add tests for encoding TVM binaries`
+- [x] Confirm red: `go test ./internal/tvmfile/ -run 'TestEncode|RoundTrip' -v` — all fail with "not implemented."
+- [x] Commit: `Add tests for encoding TVM binaries`
 
 #### Step 5 — Encode (GREEN)
 
-- [ ] Implement in `tvm_file.go` (add the `math` import):
+- [x] Implement in `tvm_file.go` (add the `math` import):
 
 ```go
 // Encode encodes a sequence of words as a TVM binary blob: the magic bytes followed
@@ -317,12 +326,12 @@ func Encode(program []int) ([]byte, error) {
 }
 ```
 
-- [ ] Green: `go test ./internal/tvmfile/ -v` + full gate.
-- [ ] Commit: `Encode TVM binary files`
+- [x] Green: `go test ./internal/tvmfile/ -v` + full gate.
+- [x] Commit: `Encode TVM binary files`
 
 #### Step 6 — File I/O (RED)
 
-- [ ] Add to `tvm_file_test.go` (files go to `t.TempDir()`; the bytes written during setup are literals, never `Encode` output — the disk round-trip is the point):
+- [x] Add to `tvm_file_test.go` (files go to `t.TempDir()`; the bytes written during setup are literals, never `Encode` output — the disk round-trip is the point):
 
 ```go
 func TestReadFile(t *testing.T) {
@@ -342,7 +351,7 @@ func TestReadFile(t *testing.T) {
 		{
 			name:        "bad magic errors",
 			fileName:    "program.tvm",
-			fileBytes:   []byte("XVM\0\x09\x00\x00\x00"),
+			fileBytes:   []byte("XVM\x00\x09\x00\x00\x00"),
 			wantErrPart: "magic",
 		},
 		{
@@ -410,12 +419,12 @@ func TestWriteFile(t *testing.T) {
 }
 ```
 
-- [ ] Confirm red: `go test ./internal/tvmfile/ -run 'TestReadFile|TestWriteFile' -v`.
-- [ ] Commit: `Add tests for reading and writing TVM files`
+- [x] Confirm red: `go test ./internal/tvmfile/ -run 'TestReadFile|TestWriteFile' -v`.
+- [x] Commit: `Add tests for reading and writing TVM files`
 
 #### Step 7 — File I/O (GREEN)
 
-- [ ] Implement in `tvm_file.go` (add the `os` import):
+- [x] Implement in `tvm_file.go` (add the `os` import):
 
 ```go
 // ReadFile reads the TVM binary file at the given path and decodes it
@@ -448,19 +457,19 @@ func WriteFile(path string, program []int) error {
 }
 ```
 
-- [ ] Green: `go test ./internal/tvmfile/ -v` + full gate.
-- [ ] Commit: `Read and write TVM files`
+- [x] Green: `go test ./internal/tvmfile/ -v` + full gate.
+- [x] Commit: `Read and write TVM files`
 
 ### Phase 2 — Fixtures (ground truth, after the codec)
 
 #### Step 8 — `.gitattributes`
 
-- [ ] Create `.gitattributes` at the repo root with the single line `*.tvm binary` (pins the binary fixtures against CRLF normalization on mixed-platform checkouts).
-- [ ] Commit: `Mark TVM binary files as binary for git`
+- [x] Create `.gitattributes` at the repo root with the single line `*.tvm binary` (pins the binary fixtures against CRLF normalization on mixed-platform checkouts).
+- [x] Commit: `Mark TVM binary files as binary for git`
 
 #### Step 9 — The fixture files
 
-- [ ] Generate the seven `.tvm` fixtures (octal-escape equivalents of the hex table above):
+- [x] Generate the seven `.tvm` fixtures (octal-escape equivalents of the hex table above):
 
 ```sh
 mkdir -p test_data
@@ -475,17 +484,17 @@ printf 'TVM\0\001\000\000' > test_data/truncated_word.tvm
 ```
 
   and the two `.tva` text files: `test_data/out_5.tva` = `out 5` / `hlt` and `test_data/bad_instruction.tva` = `frobnicate 1` (one line each, trailing newline).
-- [ ] Verify: `xxd test_data/*.tvm` matches the hex table byte-for-byte.
-- [ ] Commit: `Add test fixtures for TVM binary file I/O`
+- [x] Verify: `xxd test_data/*.tvm` matches the hex table byte-for-byte.
+- [x] Commit: `Add test fixtures for TVM binary file I/O`
 
 #### Step 10 — Fixture verification tests (green-from-the-start guardrail)
 
-- [ ] Create `internal/tvmfile/fixture_test.go`:
+- [x] Create `internal/tvmfile/fixture_test.go`:
 
 ```go
 // fixturePath resolves a file from the repository's test_data directory
 func fixturePath(name string) string {
-	return filepath.Join("..", "test_data", name)
+	return filepath.Join("..", "..", "test_data", name)
 }
 
 func TestDecodeFixtures(t *testing.T) {
@@ -546,14 +555,14 @@ func TestEncodeMatchesFixtures(t *testing.T) {
 ```
 
   These pass immediately — their job is to catch a botched byte in Step 9's `printf` commands (if one fails, the fixture is wrong, not the codec; fix the fixture).
-- [ ] Confirm green: `go test ./internal/tvmfile/ -run Fixture -v` + full gate.
-- [ ] Commit: `Add fixture verification tests for the TVM file format`
+- [x] Confirm green: `go test ./internal/tvmfile/ -run Fixture -v` + full gate.
+- [x] Commit: `Add fixture verification tests for the TVM file format`
 
 ### Phase 3 — `cmd/tvm`: read a TVM file and execute it (README line 64)
 
 #### Step 11 — Refactor into a testable `run`
 
-- [ ] Rewrite `cmd/tvm/main.go` (imports land in two steps: `fmt`/`io`/`os` here; `tvm`/`tvmfile`/`bufio` arrive in Step 13):
+- [x] Rewrite `cmd/tvm/main.go` (imports land in two steps: `fmt`/`io`/`os` here; `tvm`/`tvmfile`/`bufio` arrive in Step 13):
 
 ```go
 package main
@@ -580,11 +589,11 @@ func run(stdin io.Reader, stdout, stderr io.Writer, args []string) int {
 }
 ```
 
-- [ ] Gate green. Commit: `Refactor the tvm executable into a testable run function` (note in the body that the hardcoded `[]int{9}` placeholder is removed)
+- [x] Gate green. Commit: `Refactor the tvm executable into a testable run function` (note in the body that the hardcoded `[]int{9}` placeholder is removed)
 
 #### Step 12 — `TestRun` (RED)
 
-- [ ] Create `cmd/tvm/main_test.go`:
+- [x] Create `cmd/tvm/main_test.go`:
 
 ```go
 func TestRun(t *testing.T) {
@@ -677,12 +686,12 @@ func TestRun(t *testing.T) {
 ```
 
   (The usage cases pass at this point — they were implemented in Step 11; every file-backed case is red: the stub returns 1 and prints nothing.)
-- [ ] Confirm red: `go test ./cmd/tvm/ -run TestRun -v`.
-- [ ] Commit: `Add tests for executing TVM files`
+- [x] Confirm red: `go test ./cmd/tvm/ -run TestRun -v`.
+- [x] Commit: `Add tests for executing TVM files`
 
 #### Step 13 — Execute (GREEN)
 
-- [ ] Complete `run` in `main.go` (add the `bufio`, `tvm/internal/tvmfile`, and `tvm/internal/virtual_machine` imports):
+- [x] Complete `run` in `main.go` (add the `bufio`, `tvm/internal/tvmfile`, and `tvm/internal/virtual_machine` imports):
 
 ```go
 func run(stdin io.Reader, stdout, stderr io.Writer, args []string) int {
@@ -710,7 +719,7 @@ func run(stdin io.Reader, stdout, stderr io.Writer, args []string) int {
 }
 ```
 
-- [ ] Create `cmd/tvm/io.go`:
+- [x] Create `cmd/tvm/io.go`:
 
 ```go
 // stdinInput implements the machine's input interface by reading integers from a
@@ -744,14 +753,14 @@ func (o *stdoutOutput) EmitOutput(number int) {
 }
 ```
 
-- [ ] Green: `go test ./cmd/tvm/ -v` + full gate.
-- [ ] Commit: `Execute TVM files in the tvm executable` (body bullets: `tvmfile.ReadFile` + real stdin/stdout adapters; usage errors exit 2, load/execution errors exit 1)
+- [x] Green: `go test ./cmd/tvm/ -v` + full gate.
+- [x] Commit: `Execute TVM files in the tvm executable` (body bullets: `tvmfile.ReadFile` + real stdin/stdout adapters; usage errors exit 2, load/execution errors exit 1)
 
 ### Phase 4 — `cmd/tva`: write a TVM binary file (README line 95)
 
 #### Step 14 — Refactor into a testable `run`
 
-- [ ] Rewrite `cmd/tva/main.go` (replacing the hello-world stub):
+- [x] Rewrite `cmd/tva/main.go` (replacing the hello-world stub):
 
 ```go
 package main
@@ -779,11 +788,11 @@ func run(stdin io.Reader, stdout, stderr io.Writer, args []string) int {
 }
 ```
 
-- [ ] Gate green. Commit: `Refactor the tva executable into a testable run function`
+- [x] Gate green. Commit: `Refactor the tva executable into a testable run function`
 
 #### Step 15 — `TestRun` (RED)
 
-- [ ] Create `cmd/tva/main_test.go` (inputs are the committed fixtures used in place; outputs go to `t.TempDir()`):
+- [x] Create `cmd/tva/main_test.go` (inputs are the committed fixtures used in place; outputs go to `t.TempDir()`):
 
 ```go
 func TestRun(t *testing.T) {
@@ -809,6 +818,7 @@ func TestRun(t *testing.T) {
 		{
 			name:           "missing input file fails",
 			inputFixture:   "../../test_data/missing.tva",
+			outputRelPath:  "out.tvm",
 			wantExit:       1,
 			wantStderrPart: "missing.tva",
 		},
@@ -869,12 +879,12 @@ func TestRun(t *testing.T) {
 ```
 
   The `assembles and writes` case is the seam anchor: the hand-authored `out_5.tva` must assemble to bytes identical to the hand-authored `out_5.tvm`.
-- [ ] Confirm red: `go test ./cmd/tva/ -run TestRun -v`.
-- [ ] Commit: `Add tests for writing TVM files`
+- [x] Confirm red: `go test ./cmd/tva/ -run TestRun -v`.
+- [x] Commit: `Add tests for writing TVM files`
 
 #### Step 16 — Assemble and write (GREEN)
 
-- [ ] Complete `run` in `main.go` (add the `tvm/internal/tvmfile` import):
+- [x] Complete `run` in `main.go` (add the `tvm/internal/tvmfile` import):
 
 ```go
 func run(stdin io.Reader, stdout, stderr io.Writer, args []string) int {
@@ -904,15 +914,15 @@ func run(stdin io.Reader, stdout, stderr io.Writer, args []string) int {
 }
 ```
 
-- [ ] Green: `go test ./cmd/tva/ -v` + full gate.
-- [ ] Commit: `Write TVM binary files in the tva executable`
+- [x] Green: `go test ./cmd/tva/ -v` + full gate.
+- [x] Commit: `Write TVM binary files in the tva executable`
 
 ### Phase 5 — Docs
 
 #### Step 17 — README + AGENTS.md
 
-- [ ] README: check off line 64 (`- [ ]` → `- [x]` *Read a TVM binary file and executes it*) and line 95 (`- [ ]` → `- [x]` *Writes to a TVM binary file with correct syntax*). Keep both sub-phrasings as-is. (CRLF file — stage surgically if the working tree ever has unrelated README edits.)
-- [ ] AGENTS.md: rewrite the gotcha
+- [x] README: check off line 64 (`- [ ]` → `- [x]` *Read a TVM binary file and executes it*) and line 95 (`- [ ]` → `- [x]` *Writes to a TVM binary file with correct syntax*). Keep both sub-phrasings as-is. (CRLF file — stage surgically if the working tree ever has unrelated README edits.)
+- [x] AGENTS.md: rewrite the gotcha
 
   > Planned TVM binary format (README): little-endian 32-bit words prefixed with the ASCII magic `TVM\0`. File I/O is unimplemented on both the assembler and VM sides.
 
@@ -920,7 +930,7 @@ func run(stdin io.Reader, stdout, stderr io.Writer, args []string) int {
 
   > TVM binary files: `internal/tvmfile` encodes/decodes them — ASCII magic `TVM\0` followed by little-endian signed 32-bit words. `cmd/tvm` runs `.tvm` files and `cmd/tva` writes them. Binary test fixtures live in `test_data/` (read-only ground truth; test output goes to temp dirs).
 
-- [ ] Commit: `Update README and AGENTS.md for binary file I/O`
+- [x] Commit: `Update README and AGENTS.md for binary file I/O`
 
 ## Final gate
 
