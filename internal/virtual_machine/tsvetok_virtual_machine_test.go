@@ -211,3 +211,20 @@ func TestTsvetokVirtualMachine_ReturnsErrorWhenNoOutputInterfaceIsSet(t *testing
 	machine := NewTsvetokVirtualMachine([]int{4, 0, 9})
 	require.Error(t, machine.Execute())
 }
+
+func TestTsvetokVirtualMachine_NegativeMemoryAddressesError(t *testing.T) {
+	for _, tc := range []executionTestCase{
+		{program: []int{9, 1, 2, 3, 4}, testName: "non-empty program"},
+		{program: []int{}, testName: "empty program"},
+	} {
+		t.Run(tc.testName, func(t *testing.T) {
+			machine := NewTsvetokVirtualMachine(tc.program)
+
+			err := machine.SetValueInMemory(-1, 42)
+			require.Error(t, err, "writing to a negative address must error")
+
+			_, err = machine.GetValueInMemory(-1)
+			require.Error(t, err, "reading a negative address must error")
+		})
+	}
+}
