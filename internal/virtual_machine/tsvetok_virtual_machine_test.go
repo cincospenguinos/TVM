@@ -278,3 +278,18 @@ func TestTsvetokVirtualMachine_ExpandsMemoryOnOutOfBoundsRead(t *testing.T) {
 	assert.Equal(t, 0, val)
 	assert.Len(t, machine.CopyMemory(), 101)
 }
+
+func TestTsvetokVirtualMachine_StoresToMemoryFarBeyondTheProgram(t *testing.T) {
+	// add 5, 5, $100 / hlt — a five-word program that stores at index 100
+	machine := NewTsvetokVirtualMachine([]int{1101, 5, 5, 100, 9})
+	require.NoError(t, machine.Execute())
+
+	memory := machine.CopyMemory()
+	assert.Len(t, memory, 101)
+	assert.Equal(t, 10, memory[100])
+	assert.Equal(t, 1101, memory[0], "the program words must be untouched")
+
+	gapVal, err := machine.GetValueInMemory(50)
+	require.NoError(t, err)
+	assert.Equal(t, 0, gapVal, "the gap must be zero-filled")
+}
