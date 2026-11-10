@@ -34,7 +34,7 @@ func TestTsvetokAssembler_HandlesAllRegularInstructionsInMemoryMode(t *testing.T
 
 			machine := tvm.NewTsvetokVirtualMachine(program)
 
-			mockInput := tvm.MockInputInterface{-69}
+			mockInput := tvm.MockInputInterface{NumberToReturn: -69}
 			machine.SetInputInterface(mockInput)
 
 			mockOutput := &tvm.MockOutputInterface{}
@@ -103,7 +103,7 @@ func TestTsvetokAssembler_HandlesAllRegularInstructionsInRegisterMode(t *testing
 			mockOutput := &tvm.MockOutputInterface{}
 			machine.SetOutputInterface(mockOutput)
 
-			mockInput := &tvm.MockInputInterface{-3}
+			mockInput := &tvm.MockInputInterface{NumberToReturn: -3}
 			machine.SetInputInterface(mockInput)
 
 			preExecutionMemory := machine.CopyMemory()
