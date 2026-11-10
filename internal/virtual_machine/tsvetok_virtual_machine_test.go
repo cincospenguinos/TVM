@@ -201,3 +201,13 @@ func TestTsvetokVirtualMachine_SetIfLessThanWorks(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 1, val)
 }
+
+func TestTsvetokVirtualMachine_ReturnsErrorWhenNoInputInterfaceIsSet(t *testing.T) {
+	machine := NewTsvetokVirtualMachine([]int{3, 0, 9})
+	require.Error(t, machine.Execute())
+}
+
+func TestTsvetokVirtualMachine_ReturnsErrorWhenNoOutputInterfaceIsSet(t *testing.T) {
+	machine := NewTsvetokVirtualMachine([]int{4, 0, 9})
+	require.Error(t, machine.Execute())
+}
