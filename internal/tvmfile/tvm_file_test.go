@@ -3,6 +3,8 @@ package tvmfile
 import (
 	"fmt"
 	"math"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -139,4 +141,88 @@ func TestEncodeDecodeRoundTrip(t *testing.T) {
 			assert.Equal(t, program, words)
 		})
 	}
+}
+
+func TestReadFile(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		fileName    string
+		fileBytes   []byte
+		wantWords   []int
+		wantErrPart string
+	}{
+		{
+			name:      "reads a program",
+			fileName:  "program.tvm",
+			fileBytes: append(append([]byte{}, testMagic...), 9, 0, 0, 0),
+			wantWords: []int{9},
+		},
+		{
+			name:        "bad magic errors",
+			fileName:    "program.tvm",
+			fileBytes:   []byte("XVM\x00\x09\x00\x00\x00"),
+			wantErrPart: "magic",
+		},
+		{
+			name:        "missing file errors",
+			fileName:    "missing.tvm",
+			wantErrPart: "missing.tvm",
+		},
+		{
+			name:      "magic only is an empty program",
+			fileName:  "program.tvm",
+			fileBytes: append([]byte{}, testMagic...),
+			wantWords: []int{},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), tc.fileName)
+			if tc.fileBytes != nil {
+				require.NoError(t, os.WriteFile(path, tc.fileBytes, 0o644))
+			}
+
+			words, err := ReadFile(path)
+
+			if tc.wantErrPart != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tc.wantErrPart)
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tc.wantWords, words)
+		})
+	}
+}
+
+func TestWriteFile(t *testing.T) {
+	t.Run("writes the magic and the words", func(t *testing.T) {
+		path := filepath.Join(t.TempDir(), "program.tvm")
+		wantBytes := append(append([]byte{}, testMagic...), 9, 0, 0, 0)
+
+		require.NoError(t, WriteFile(path, []int{9}))
+
+		data, err := os.ReadFile(path)
+		require.NoError(t, err)
+		assert.Equal(t, wantBytes, data)
+	})
+
+	t.Run("round trips through ReadFile", func(t *testing.T) {
+		path := filepath.Join(t.TempDir(), "program.tvm")
+		program := []int{1101, 5, 5, 10, 9}
+
+		require.NoError(t, WriteFile(path, program))
+
+		words, err := ReadFile(path)
+		require.NoError(t, err)
+		assert.Equal(t, program, words)
+	})
+
+	t.Run("an overflowing word errors without writing", func(t *testing.T) {
+		path := filepath.Join(t.TempDir(), "program.tvm")
+
+		require.Error(t, WriteFile(path, []int{1 << 31}))
+		_, statErr := os.Stat(path)
+		assert.Error(t, statErr)
+	})
 }
