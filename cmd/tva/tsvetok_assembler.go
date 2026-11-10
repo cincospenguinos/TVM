@@ -1,4 +1,4 @@
-package tva
+package main
 
 import (
 	"errors"
