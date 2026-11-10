@@ -59,10 +59,8 @@ TVM files are binary files with all bytes in little-endian. They begin with the 
 - [x] All operations support address mode
 - [x] All operations support immediate mode
 - [x] All operations support register mode
-	* Actually I'm not sure I want to support register mode yet
 - [x] Set-less-than instruction
 - [x] Any memory address that does not exist will immediately exist upon lookup or writing
-	* If we expand memory to fill the space, we set everything inside to 0
 - [ ] Read a TVM binary file and executes it
 - [ ] Do we want to allow the program counter to be a read-only register by programmers? It'd be a nice quality of life thing (`out pc` could act like a print statement)
 
