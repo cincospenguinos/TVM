@@ -228,3 +228,37 @@ func TestTsvetokVirtualMachine_NegativeMemoryAddressesError(t *testing.T) {
 		})
 	}
 }
+
+func TestTsvetokVirtualMachine_ExpandsMemoryOnOutOfBoundsWrite(t *testing.T) {
+	machine := NewTsvetokVirtualMachine([]int{9, 1, 2, 3, 4})
+
+	require.NoError(t, machine.SetValueInMemory(100, 42))
+
+	memory := machine.CopyMemory()
+	assert.Len(t, memory, 101)
+	assert.Equal(t, 42, memory[100])
+
+	// the gap must be zero-filled
+	gapVal, err := machine.GetValueInMemory(5)
+	require.NoError(t, err)
+	assert.Equal(t, 0, gapVal)
+
+	gapVal, err = machine.GetValueInMemory(99)
+	require.NoError(t, err)
+	assert.Equal(t, 0, gapVal)
+
+	// the original program words must be untouched
+	assert.Equal(t, []int{9, 1, 2, 3, 4}, memory[:5])
+}
+
+func TestTsvetokVirtualMachine_WritesToExistingMemoryDoNotGrowIt(t *testing.T) {
+	machine := NewTsvetokVirtualMachine([]int{9, 1, 2, 3, 4})
+
+	require.NoError(t, machine.SetValueInMemory(4, 99))
+	assert.Len(t, machine.CopyMemory(), 5, "writing to the last index must not grow memory")
+
+	require.NoError(t, machine.SetValueInMemory(5, 10))
+	memory := machine.CopyMemory()
+	assert.Len(t, memory, 6, "writing one past the end must grow by exactly one word")
+	assert.Equal(t, 10, memory[5])
+}
