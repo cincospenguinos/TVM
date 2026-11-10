@@ -262,3 +262,19 @@ func TestTsvetokVirtualMachine_WritesToExistingMemoryDoNotGrowIt(t *testing.T) {
 	assert.Len(t, memory, 6, "writing one past the end must grow by exactly one word")
 	assert.Equal(t, 10, memory[5])
 }
+
+func TestTsvetokVirtualMachine_ExpandsMemoryOnOutOfBoundsRead(t *testing.T) {
+	machine := NewTsvetokVirtualMachine([]int{9, 1, 2, 3, 4})
+
+	// an in-range read is unchanged and must not grow memory
+	val, err := machine.GetValueInMemory(3)
+	require.NoError(t, err)
+	assert.Equal(t, 3, val)
+	assert.Len(t, machine.CopyMemory(), 5)
+
+	// an out-of-bounds read returns 0 and materializes the address
+	val, err = machine.GetValueInMemory(100)
+	require.NoError(t, err)
+	assert.Equal(t, 0, val)
+	assert.Len(t, machine.CopyMemory(), 101)
+}
