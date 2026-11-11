@@ -239,7 +239,6 @@ func TestTsvetokAssembler_RunsTheLabelJumpSample(t *testing.T) {
 }
 
 func TestTsvetokAssembler_AcceptsLabelsAsLocationsForJumping(t *testing.T) {
-	t.Skip("TODO: This is an integration heavy test")
 	assemblyStr := `
 		jit 1, i.end
 		add 0, 0, $0
@@ -251,10 +250,14 @@ func TestTsvetokAssembler_AcceptsLabelsAsLocationsForJumping(t *testing.T) {
 	program, err := assembler.Assemble()
 	require.NoError(t, err)
 
+	// .end resolves to index 7 (the hlt): the jit jumps over the add, which would
+	// otherwise have overwritten memory[0] with 0
+	assert.Equal(t, []int{1106, 1, 7, 1101, 0, 0, 0, 9}, program)
+
 	machine := tvm.NewTsvetokVirtualMachine(program)
 	err = machine.Execute()
 	require.NoError(t, err)
 
 	memory := machine.CopyMemory()
-	assert.NotEqual(t, 0, memory[0])
+	assert.Equal(t, 1106, memory[0])
 }
