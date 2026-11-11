@@ -14,14 +14,27 @@ var labelDeclarationPattern = regexp.MustCompile(`^\.[A-Za-z0-9_-]+$`)
 // that is followed by extraneous content apart from a label whose name is invalid to begin with
 var labelPrefixPattern = regexp.MustCompile(`^\.[A-Za-z0-9_-]+`)
 
+// labelReferencePattern matches a valid reference to a label in a parameter position: a format
+// indicator (capture group 1; 'i' for immediate or '$' for address) followed by a dot and a
+// label name. This and labelDeclarationPattern are the single source of truth for label syntax
+var labelReferencePattern = regexp.MustCompile(`^([i$])\.[A-Za-z0-9_-]+$`)
+
+// labelReference is a reference to a label: the format indicator ('i' for immediate, '$' for
+// address) and the name of the label referred to
+type labelReference struct {
+	indicator string
+	name      string
+}
+
 // labelExtractor is a helper object that extracts labels from a provided line of assembly
 // code, keeping track of what original line number it was either declared or used, and is
 // to be used to supply correct indexing information at assembly time. Note that there are
 // two usages of labels: declarations (e.g. `.main`, which must occupy a line of their own)
 // and accessions (e.g. `add i.main, 1, $.main`)
 type labelExtractor struct {
-	labelsDeclared  map[string]tsvasmLine
-	labelAccessions map[string]tsvasmLine
+	labelsDeclared      map[string]tsvasmLine
+	labelAccessions     map[string]tsvasmLine
+	labelAccessionOrder []string
 }
 
 func newLabelExtractor() *labelExtractor {
@@ -32,21 +45,25 @@ func newLabelExtractor() *labelExtractor {
 }
 
 // Extracts labels from a given line of assembly, returning an error if the line declares a
-// label that is syntactically invalid or already declared
+// label that is syntactically invalid or already declared, or references a label with invalid
+// syntax
 func (l *labelExtractor) ExtractLabels(line tsvasmLine) error {
 	if strings.HasPrefix(line.assemblyCode, ".") {
 		return l.declareLabel(line)
 	}
 
-	labelAccessionPattern := regexp.MustCompile(`[\$i]\.`)
-	chunks := line.extractChunks()
-	params := chunks[1:]
+	for _, param := range line.extractChunks()[1:] {
+		paramSansComma := strings.ReplaceAll(param, ",", "")
 
-	for _, param := range params {
-		if labelAccessionPattern.MatchString(param) {
-			paramSansComma := strings.ReplaceAll(param, ",", "")
-			labelName := labelAccessionPattern.ReplaceAllLiteralString(paramSansComma, "")
-			l.labelAccessions[labelName] = line
+		reference, isReference, err := parseLabelReference(paramSansComma)
+		if err != nil {
+			return err
+		}
+
+		// Only record the first occurrence of a reference; it is what errors will point at
+		if isReference && !l.LabelAccessed(reference.name) {
+			l.labelAccessions[reference.name] = line
+			l.labelAccessionOrder = append(l.labelAccessionOrder, reference.name)
 		}
 	}
 
@@ -91,6 +108,22 @@ func parseLabelDeclaration(line string) (string, error) {
 	return "", fmt.Errorf("invalid label '%v': a label is a '.' followed by one or more of letters, digits, dashes, or underscores", name)
 }
 
+// parseLabelReference parses the given (already comma-stripped) parameter as a label reference.
+// ok is true when the parameter is a syntactically valid reference (i.<label> or $.<label>);
+// an error is returned when the parameter attempts to be a reference but is malformed; and
+// neither holds when the parameter is not a reference at all
+func parseLabelReference(param string) (reference labelReference, ok bool, err error) {
+	if matches := labelReferencePattern.FindStringSubmatch(param); matches != nil {
+		return labelReference{indicator: matches[1], name: matches[0][2:]}, true, nil
+	}
+
+	if strings.HasPrefix(param, ParamIndicatorImmediate+".") || strings.HasPrefix(param, ParamIndicatorMemoryAddress+".") {
+		return labelReference{}, false, fmt.Errorf("invalid label reference '%v': a reference is 'i.<label>' or '$.<label>' where <label> is letters, digits, dashes, or underscores", param)
+	}
+
+	return labelReference{}, false, nil
+}
+
 // Returns true if the label name provided is declared in the program
 func (l *labelExtractor) LabelDeclared(labelName string) bool {
 	_, found := l.labelsDeclared[labelName]
@@ -101,4 +134,18 @@ func (l *labelExtractor) LabelDeclared(labelName string) bool {
 func (l *labelExtractor) LabelAccessed(labelName string) bool {
 	_, found := l.labelAccessions[labelName]
 	return found
+}
+
+// ValidateAccessions ensures that every label that was referenced was also declared, returning
+// an error (naming the label and the line of its first reference) for the first undeclared
+// reference found
+func (l *labelExtractor) ValidateAccessions() error {
+	for _, labelName := range l.labelAccessionOrder {
+		if !l.LabelDeclared(labelName) {
+			reference := l.labelAccessions[labelName]
+			return fmt.Errorf("'%v' is referenced on line %v but never declared", labelName, reference.lineNumber)
+		}
+	}
+
+	return nil
 }

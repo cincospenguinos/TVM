@@ -30,6 +30,10 @@ func (a *TsvetokAssembler) Assemble() ([]int, error) {
 		}
 	}
 
+	if err := labelExtractor.ValidateAccessions(); err != nil {
+		return []int{}, err
+	}
+
 	instructions := make([]*instructionBuilder, 0)
 	for _, line := range linesOfCode {
 		builder := &instructionBuilder{}
