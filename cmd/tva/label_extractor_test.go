@@ -37,3 +37,83 @@ func TestLabelExtractor_DoesNotAllowMultipleDeclarationsOfALabel(t *testing.T) {
 	require.NoError(t, extractor.ExtractLabels(tsvasmLine{".foo", 12}))
 	require.Error(t, extractor.ExtractLabels(tsvasmLine{".foo", 24}))
 }
+
+func TestLabelExtractor_AcceptsValidLabelNames(t *testing.T) {
+	for _, name := range []string{
+		".label",
+		".data",
+		".1234",
+		"._1234",
+		".my-cool-label",
+		".my_cool_label",
+		".__foo-bar123__",
+	} {
+		t.Run(name, func(t *testing.T) {
+			extractor := newLabelExtractor()
+			require.NoError(t, extractor.ExtractLabels(tsvasmLine{name, 1}), "label name should be valid")
+
+			assert.True(t, extractor.LabelDeclared(name[1:]), "the label name should have been declared")
+		})
+	}
+}
+
+func TestLabelExtractor_RejectsInvalidLabelReferences(t *testing.T) {
+	for _, tc := range []tsvasmLine{
+		{"add i.$foo, 0, $0", 3},
+		{"add i., 0, $0", 3},
+		{"add i.foo.bar, 0, $0", 3},
+		{"add $. 0, $0, $0", 3},
+	} {
+		t.Run(tc.assemblyCode, func(t *testing.T) {
+			extractor := newLabelExtractor()
+			err := extractor.ExtractLabels(tc)
+
+			require.Error(t, err, "the label reference should be invalid")
+			assert.Contains(t, err.Error(), "invalid label reference")
+		})
+	}
+}
+
+func TestLabelExtractor_ValidateAccessionsAllowsForwardReferences(t *testing.T) {
+	extractor := newLabelExtractor()
+	require.NoError(t, extractor.ExtractLabels(tsvasmLine{"jit 1, i.end", 1}))
+	require.NoError(t, extractor.ExtractLabels(tsvasmLine{".end", 2}))
+	require.NoError(t, extractor.ExtractLabels(tsvasmLine{"hlt", 3}))
+
+	assert.NoError(t, extractor.ValidateAccessions(), "a label referenced before it is declared is fine")
+}
+
+func TestLabelExtractor_ValidateAccessionsRejectsUndeclaredLabels(t *testing.T) {
+	extractor := newLabelExtractor()
+	require.NoError(t, extractor.ExtractLabels(tsvasmLine{"add i.nope, 0, $0", 3}))
+	require.NoError(t, extractor.ExtractLabels(tsvasmLine{"hlt", 4}))
+
+	err := extractor.ValidateAccessions()
+	require.Error(t, err, "referencing a label that was never declared should fail")
+	assert.Contains(t, err.Error(), "nope")
+	assert.Contains(t, err.Error(), "3")
+}
+
+func TestLabelExtractor_RejectsInvalidLabelDeclarations(t *testing.T) {
+	for _, tc := range []struct {
+		assemblyCode string
+		expectedPart string
+	}{
+		// A valid label followed by extraneous content...
+		{".bad label", "must be alone on its line"},
+		{".foo bar baz", "must be alone on its line"},
+		{".foo.", "must be alone on its line"},
+		// ...as opposed to a name that is invalid to begin with
+		{".", "invalid label"},
+		{".$foo", "invalid label"},
+		{".foo bar", "must be alone on its line"},
+	} {
+		t.Run(tc.assemblyCode, func(t *testing.T) {
+			extractor := newLabelExtractor()
+			err := extractor.ExtractLabels(tsvasmLine{tc.assemblyCode, 5})
+
+			require.Error(t, err, "the label declaration should be invalid")
+			assert.Contains(t, err.Error(), tc.expectedPart, "the error should explain what is wrong")
+		})
+	}
+}

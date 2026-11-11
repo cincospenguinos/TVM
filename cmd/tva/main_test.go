@@ -52,6 +52,20 @@ func TestRun(t *testing.T) {
 			wantOutputFixture: "../../test_data/out_5.tvm",
 		},
 		{
+			name:              "assembles the label/jump sample to its fixture",
+			inputFixture:      "../../test_data/label_jump_test.tva",
+			outputRelPath:     "out.tvm",
+			wantExit:          0,
+			wantOutputFixture: "../../test_data/label_jump_test.tvm",
+		},
+		{
+			name:           "invalid label declaration fails",
+			inputFixture:   "../../test_data/bad_label.tva",
+			outputRelPath:  "out.tvm",
+			wantExit:       1,
+			wantStderrPart: "invalid label",
+		},
+		{
 			name:           "unwritable output path fails",
 			inputFixture:   "../../test_data/out_5.tva",
 			outputRelPath:  filepath.Join("no_such_dir", "out.tvm"),

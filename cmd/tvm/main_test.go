@@ -79,6 +79,12 @@ func TestRun(t *testing.T) {
 			wantExit:   0,
 			wantStdout: "0\n",
 		},
+		{
+			name:       "the label/jump sample prints the un-overwritten jmp word",
+			args:       []string{"../../test_data/label_jump_test.tvm"},
+			wantExit:   0,
+			wantStdout: "1106\n",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			stdout := &bytes.Buffer{}

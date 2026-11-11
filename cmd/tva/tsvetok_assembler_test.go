@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	tvm "tvm/internal/virtual_machine"
@@ -134,6 +135,68 @@ func TestTsvetokAssembler_StoringFarBeyondTheProgramExpandsMemory(t *testing.T) 
 	assert.Equal(t, 10, memory[100])
 }
 
+func TestTsvetokAssembler_FailsWhenReferencingAnUndeclaredLabel(t *testing.T) {
+	assembler := NewAssemblerFromString("add i.nope, 0, $0\nhlt")
+
+	_, err := assembler.Assemble()
+
+	require.Error(t, err, "referencing a label that was never declared should fail")
+	assert.Contains(t, err.Error(), "nope")
+	assert.Contains(t, err.Error(), "1") // the line of the reference
+}
+
+func TestTsvetokAssembler_ResolvedLabelReferences(t *testing.T) {
+	for _, tc := range []struct {
+		program  string
+		expected []int
+		name     string
+	}{
+		{
+			program:  "hlt\n.main",
+			expected: []int{9},
+			name:     "a standalone label emits no words",
+		},
+		{
+			program:  "add 1, 1, $0\n.end\njit 1, i.end\nhlt",
+			expected: []int{1101, 1, 1, 0, 1106, 1, 4, 9},
+			name:     "a backward reference resolves to the index after the instruction before the label",
+		},
+		{
+			program:  "jit 1, i.end\nadd 1, 1, $0\n.end\nhlt",
+			expected: []int{1106, 1, 7, 1101, 1, 1, 0, 9},
+			name:     "a forward reference resolves to the same index",
+		},
+		{
+			program:  "jit 1, $.end\nadd 1, 1, $0\n.end\nhlt",
+			expected: []int{106, 1, 7, 1101, 1, 1, 0, 9},
+			name:     "a $. form reference uses address format",
+		},
+		{
+			// add=4 words, hlt=1 word, out=2 words, in=2 words: .mid lands at 4, .end at 7
+			program:  "add 1, 1, $0\n.mid\nhlt\nout $.end\n.end\nin i.mid",
+			expected: []int{1101, 1, 1, 0, 9, 4, 7, 103, 4},
+			name:     "label indexes accumulate across mixed instruction word counts",
+		},
+		{
+			program: "  jmp i.main # jump to .main, skipping the add\n" +
+				"  add 10, 10, $0 # overwriting the jmp word, which should not execute\n" +
+				".main\n" +
+				"  out $0\n" +
+				"  hlt\n",
+			expected: []int{1106, 1, 7, 1101, 10, 10, 0, 4, 0, 9},
+			name:     "the sample label/jump program assembles to its expected intcode",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			assembler := NewAssemblerFromString(tc.program)
+			program, err := assembler.Assemble()
+			require.NoError(t, err)
+
+			assert.Equal(t, tc.expected, program)
+		})
+	}
+}
+
 func TestTsvetokAssembler_IgnoresCommentsSpacesAndTheLike(t *testing.T) {
 	program := `# This is a comment. In Tsvetok Assembly we start comments
 	# with the '#' character. There are no multi-line comments;
@@ -148,8 +211,34 @@ func TestTsvetokAssembler_IgnoresCommentsSpacesAndTheLike(t *testing.T) {
 	assert.Equal(t, 9, intcode[0])
 }
 
+func TestTsvetokAssembler_RunsTheLabelJumpSample(t *testing.T) {
+	source, err := os.ReadFile("../../test_data/label_jump_test.tva")
+	require.NoError(t, err)
+
+	assembler := NewAssemblerFromString(string(source))
+	program, err := assembler.Assemble()
+	require.NoError(t, err)
+
+	machine := tvm.NewTsvetokVirtualMachine(program)
+
+	mockInput := tvm.MockInputInterface{NumberToReturn: -69}
+	machine.SetInputInterface(mockInput)
+
+	mockOutput := &tvm.MockOutputInterface{}
+	machine.SetOutputInterface(mockOutput)
+
+	require.NoError(t, machine.Execute())
+
+	// The jmp skips the add, so memory[0] is never overwritten and still holds the
+	// jmp's opcode word, which the out then prints
+	require.NotNil(t, mockOutput.LastNumberReceived)
+	assert.Equal(t, 1106, *mockOutput.LastNumberReceived)
+
+	memory := machine.CopyMemory()
+	assert.Equal(t, 1106, memory[0])
+}
+
 func TestTsvetokAssembler_AcceptsLabelsAsLocationsForJumping(t *testing.T) {
-	t.Skip("TODO: This is an integration heavy test")
 	assemblyStr := `
 		jit 1, i.end
 		add 0, 0, $0
@@ -161,10 +250,14 @@ func TestTsvetokAssembler_AcceptsLabelsAsLocationsForJumping(t *testing.T) {
 	program, err := assembler.Assemble()
 	require.NoError(t, err)
 
+	// .end resolves to index 7 (the hlt): the jit jumps over the add, which would
+	// otherwise have overwritten memory[0] with 0
+	assert.Equal(t, []int{1106, 1, 7, 1101, 0, 0, 0, 9}, program)
+
 	machine := tvm.NewTsvetokVirtualMachine(program)
 	err = machine.Execute()
 	require.NoError(t, err)
 
 	memory := machine.CopyMemory()
-	assert.NotEqual(t, 0, memory[0])
+	assert.Equal(t, 1106, memory[0])
 }

@@ -26,7 +26,7 @@ Tsvetok Virtual Machine (TVM): an educational Go project written for the owner's
 - `in`/`out` return an error if the machine has no input/output interface set. Tests should set `MockInputInterface` / `MockOutputInterface` from `mocks.go` first.
 - Intcode is decimal-digit encoded: the lowest two digits are the opcode, and each higher digit is a parameter format — 0=address, 1=immediate, 2=register.
 - The register file is fixed at 14 registers: r0–r4 (reserved, preserved across jumps), t0–t7 (temporaries), `la`=13 (write-protected; only `jit` writes it, and only when the jump is taken). Writing it returns `AttemptedLastAddressWriteErr`.
-- Labels: the assembler extracts declarations/accessions (`label_extractor.go`) but never resolves them — assembling any label line fails with a strconv error. The one `t.Skip`ed test covers this; don't unskip it.
+- Labels: a declaration (`.name`) must occupy its entire line; the name is a dot followed by one or more of letters, digits, dashes, or underscores (anything after the label is an error). A label's value is the word index of the instruction immediately following it, and forward references work. References appear in parameter position as `i.<label>` (immediate: the index itself) or `$.<label>` (address: the contents at that index); the assembler rewrites them to plain parameters, so the `instructionBuilder` is label-unaware. `jmp` is a pseudo-instruction that expands to `jit 1, <target>` (constant-true condition) and takes exactly one parameter.
 - TVM binary files: `internal/tvmfile` encodes/decodes them — ASCII magic `TVM\0` followed by little-endian signed 32-bit words. Binary test fixtures live in `test_data/` (read-only ground truth; test output goes to temp dirs).
 
 ## Conventions

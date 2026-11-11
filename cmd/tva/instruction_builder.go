@@ -39,6 +39,19 @@ var registerValueMap = map[string]int{
 type instructionBuilder struct {
 	OpCode int
 	Params []int
+
+	// paramSlotOffset is the number of leading parameter slots the operation pre-populates on
+	// its own (the jmp pseudo-operation, which pre-populates jit's condition slot); the
+	// user-visible parameters are placed starting at this offset
+	paramSlotOffset int
+
+	// paramMinCount is the minimum number of user-visible parameters the operation requires;
+	// zero means the operation is fine without any
+	paramMinCount int
+
+	// paramCountLimit is the maximum number of user-visible parameters the operation accepts;
+	// zero means there is no limit beyond the machine's three slots
+	paramCountLimit int
 }
 
 // setOperation() converts the operation provided to its proper opcode, or returns an error if the operation
@@ -57,6 +70,17 @@ func (i *instructionBuilder) setOperation(operation string) error {
 		i.OpCode = 5
 	case "jit":
 		i.OpCode = 6
+	case "jmp":
+		// jmp is a pseudo-instruction that expands to jit with a constant-true condition,
+		// so the jump is always taken. The user's single target lands in jit's slot 1
+		i.OpCode = 6
+		i.Params = append(i.Params, 1)
+		i.paramSlotOffset = 1
+		i.paramMinCount = 1
+		i.paramCountLimit = 1
+		if err := i.updateOpcodeForParam(tvm.ParamFormatImmediate, 0); err != nil {
+			return err
+		}
 	case "hlt":
 		i.OpCode = 9
 	default:
@@ -67,14 +91,20 @@ func (i *instructionBuilder) setOperation(operation string) error {
 }
 
 // addParam() adds a parameter to this instruction builder given the string value and where in the instruction it is found.
-// Returns an error if the parameter is malformed
+// Returns an error if the parameter is malformed or beyond the operation's parameter count
 func (i *instructionBuilder) addParam(paramStr string, paramIndex int) error {
-	if paramIndex < 0 || paramIndex >= 3 {
+	if paramIndex < 0 || paramIndex+i.paramSlotOffset >= 3 {
 		return fmt.Errorf("'%v' is not a valid parameter index (no less than 0; no operation supports more than three)", paramIndex)
+	}
+
+	if i.paramCountLimit > 0 && paramIndex >= i.paramCountLimit {
+		return fmt.Errorf("'%v' is an extra parameter (this operation accepts at most %v)", paramStr, i.paramCountLimit)
 	}
 
 	numericPattern := regexp.MustCompile(`^\d+$`)
 	paramStr = strings.ReplaceAll(paramStr, ",", "")
+
+	paramSlot := paramIndex + i.paramSlotOffset
 
 	var paramFormat tvm.ParamFormat
 	if strings.Contains(paramStr, ParamIndicatorMemoryAddress) {
@@ -95,7 +125,7 @@ func (i *instructionBuilder) addParam(paramStr string, paramIndex int) error {
 		return fmt.Errorf("unknown parameter format '%v'", paramStr)
 	}
 
-	err := i.updateOpcodeForParam(paramFormat, paramIndex)
+	err := i.updateOpcodeForParam(paramFormat, paramSlot)
 	if err != nil {
 		return err
 	}
@@ -105,12 +135,22 @@ func (i *instructionBuilder) addParam(paramStr string, paramIndex int) error {
 		return err
 	}
 
-	for len(i.Params) <= paramIndex {
+	for len(i.Params) <= paramSlot {
 		i.Params = append(i.Params, 0)
 	}
 
-	copy(i.Params[paramIndex+1:], i.Params[paramIndex:])
-	i.Params[paramIndex] = paramVal
+	copy(i.Params[paramSlot+1:], i.Params[paramSlot:])
+	i.Params[paramSlot] = paramVal
+
+	return nil
+}
+
+// finish() validates the number of user-visible parameters the instruction was given once all
+// of them have been added, returning an error if the count is below the operation's minimum
+func (i *instructionBuilder) finish(userParamCount int) error {
+	if i.paramMinCount > 0 && userParamCount < i.paramMinCount {
+		return fmt.Errorf("this operation requires at least %v parameter(s), but %v were given", i.paramMinCount, userParamCount)
+	}
 
 	return nil
 }

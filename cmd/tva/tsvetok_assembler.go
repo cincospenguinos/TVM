@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -30,8 +31,27 @@ func (a *TsvetokAssembler) Assemble() ([]int, error) {
 		}
 	}
 
+	if err := labelExtractor.ValidateAccessions(); err != nil {
+		return []int{}, err
+	}
+
+	labelIndexes := make(map[string]int)
+	currentIndex := 0
+	for _, line := range linesOfCode {
+		if isLabelDeclaration(line) {
+			labelIndexes[line.assemblyCode[1:]] = currentIndex
+			continue // a declaration emits no words
+		}
+
+		currentIndex += instructionWords(line.extractChunks())
+	}
+
 	instructions := make([]*instructionBuilder, 0)
 	for _, line := range linesOfCode {
+		if isLabelDeclaration(line) {
+			continue // a declaration emits no words
+		}
+
 		builder := &instructionBuilder{}
 		chunks := line.extractChunks()
 
@@ -42,10 +62,32 @@ func (a *TsvetokAssembler) Assemble() ([]int, error) {
 		}
 
 		for index, paramStr := range chunks[1:] {
-			err := builder.addParam(paramStr, index)
+			param := strings.ReplaceAll(paramStr, ",", "")
+
+			if reference, isReference, err := parseLabelReference(param); err != nil {
+				return []int{}, errors.Join(err, fmt.Errorf("error on line '%v'", line.lineNumber))
+			} else if isReference {
+				targetIndex, resolved := labelIndexes[reference.name]
+				if !resolved {
+					// Cannot happen once the extract and validate passes have run, but guard
+					// against a silent misassembly rather than emitting a bogus word
+					return []int{}, errors.Join(fmt.Errorf("reference to '%v' could not be resolved", reference.name), fmt.Errorf("error on line '%v'", line.lineNumber))
+				}
+
+				// Rewrite the reference to a plain parameter with the resolved index; the
+				// instructionBuilder never needs to know about labels
+				param = reference.indicator + strconv.Itoa(targetIndex)
+			}
+
+			err = builder.addParam(param, index)
 			if err != nil {
 				return []int{}, errors.Join(err, fmt.Errorf("error on line '%v'", line.lineNumber))
 			}
+		}
+
+		err = builder.finish(len(chunks) - 1)
+		if err != nil {
+			return []int{}, errors.Join(err, fmt.Errorf("error on line '%v'", line.lineNumber))
 		}
 
 		instructions = append(instructions, builder)
@@ -57,6 +99,28 @@ func (a *TsvetokAssembler) Assemble() ([]int, error) {
 	}
 
 	return assembledProgram, nil
+}
+
+// isLabelDeclaration reports whether the line is a label declaration (a label occupying its
+// entire line). Declaration syntax is already validated by the extract pass, so a line that
+// reached the index or build pass and matches this pattern is a known declaration
+func isLabelDeclaration(line tsvasmLine) bool {
+	return labelDeclarationPattern.MatchString(line.assemblyCode)
+}
+
+// instructionWords returns how many words of intcode the given instruction chunks expand to:
+// the chunks themselves, plus any parameters that pseudo-operations inject on the user's
+// behalf. This is the only place that knows a pseudo-operation's expansion cost, so it must
+// be extended whenever a new pseudo-operation (jif, etc.) is added
+func instructionWords(chunks []string) int {
+	words := len(chunks)
+
+	switch chunks[0] {
+	case "jmp":
+		words += 1 // jmp expands to jit, which adds a constant-true condition
+	}
+
+	return words
 }
 
 // tsvasmLine is an intermediary struct that represents the original line of assembly code
