@@ -1,0 +1,10 @@
+# label_jump_test.tva
+# This program demonstrates how labels ought to work---that is, if I declare
+# a label on one line then I can jump to that line via one of the jump
+# instructions or pseudo-instructions
+  jmp i.main # This means jump straight to the .main label
+  add 10, 10, $0 # Add immediate 10 with immediate 10 and output to 0
+                 # overwriting the jmp instruction. This should not execute
+.main
+  out $0
+  hlt

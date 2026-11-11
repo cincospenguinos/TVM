@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	tvm "tvm/internal/virtual_machine"
@@ -208,6 +209,33 @@ func TestTsvetokAssembler_IgnoresCommentsSpacesAndTheLike(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, len(intcode) > 0)
 	assert.Equal(t, 9, intcode[0])
+}
+
+func TestTsvetokAssembler_RunsTheLabelJumpSample(t *testing.T) {
+	source, err := os.ReadFile("../../test_data/label_jump_test.tva")
+	require.NoError(t, err)
+
+	assembler := NewAssemblerFromString(string(source))
+	program, err := assembler.Assemble()
+	require.NoError(t, err)
+
+	machine := tvm.NewTsvetokVirtualMachine(program)
+
+	mockInput := tvm.MockInputInterface{NumberToReturn: -69}
+	machine.SetInputInterface(mockInput)
+
+	mockOutput := &tvm.MockOutputInterface{}
+	machine.SetOutputInterface(mockOutput)
+
+	require.NoError(t, machine.Execute())
+
+	// The jmp skips the add, so memory[0] is never overwritten and still holds the
+	// jmp's opcode word, which the out then prints
+	require.NotNil(t, mockOutput.LastNumberReceived)
+	assert.Equal(t, 1106, *mockOutput.LastNumberReceived)
+
+	memory := machine.CopyMemory()
+	assert.Equal(t, 1106, memory[0])
 }
 
 func TestTsvetokAssembler_AcceptsLabelsAsLocationsForJumping(t *testing.T) {
