@@ -69,7 +69,7 @@ TVM files are binary files with all bytes in little-endian. They begin with the 
 Tsvetok assembly files are plain text UTF-8 files and have the following features:
 
 * Comments are written with `#` character
-* Labels are supported: a label is declared on a line of its own (`.name`) and referenced in a parameter as `i.<label>` (immediate) or `$.<label>` (address)
+* Labels are supported: a label is declared on a line of its own (`.name`) and referenced in a parameter as `i.<label>` (immediate) or `$.<label>` (address). A label may also be declared with data values on the same line (`.name 12 i-1 i.other $.other`), which stores those values as words beginning at the label's index; a `$.<label>` value copies the word found at the label's index at assembly time
 * The `call` pseudo-instruction is supported, which the final step of assembly (linking) discovers, assembles, and copies into the machine
 
 ### TODO
@@ -83,7 +83,7 @@ Tsvetok assembly files are plain text UTF-8 files and have the following feature
 - [x] `jit` is supported
 - [x] `jmp` is supported (expands to `jit` with a constant-true condition)
 - [x] Labels for jumping are supported
-- [ ] Labels for data preservation are supported
+- [x] Labels for data preservation are supported
 - [x] All operations support immediates
 - [x] All operations support registers
 - [ ] `jif` pseudo-instruction is supported
