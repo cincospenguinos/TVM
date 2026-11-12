@@ -59,6 +59,13 @@ func TestRun(t *testing.T) {
 			wantOutputFixture: "../../test_data/label_jump_test.tvm",
 		},
 		{
+			name:              "assembles the data labels sample to its fixture",
+			inputFixture:      "../../test_data/data_labels.tva",
+			outputRelPath:     "out.tvm",
+			wantExit:          0,
+			wantOutputFixture: "../../test_data/data_labels.tvm",
+		},
+		{
 			name:           "invalid label declaration fails",
 			inputFixture:   "../../test_data/bad_label.tva",
 			outputRelPath:  "out.tvm",

@@ -398,6 +398,33 @@ func TestTsvetokAssembler_RunsTheLabelJumpSample(t *testing.T) {
 	assert.Equal(t, 1106, memory[0])
 }
 
+func TestTsvetokAssembler_RunsTheDataLabelsSample(t *testing.T) {
+	source, err := os.ReadFile("../../test_data/data_labels.tva")
+	require.NoError(t, err)
+
+	assembler := NewAssemblerFromString(string(source))
+	program, err := assembler.Assemble()
+	require.NoError(t, err)
+
+	// out $.value, hlt, the data 12 34, and a copy of the first data word
+	assert.Equal(t, []int{4, 3, 9, 12, 34, 12}, program)
+
+	machine := tvm.NewTsvetokVirtualMachine(program)
+
+	mockOutput := &tvm.MockOutputInterface{}
+	machine.SetOutputInterface(mockOutput)
+
+	require.NoError(t, machine.Execute(), fmt.Sprintf("failed execution (program was %v)", program))
+
+	// The out reads memory[3] (the first word stored at .value); the data itself is
+	// never executed, because the hlt comes first
+	require.NotNil(t, mockOutput.LastNumberReceived)
+	assert.Equal(t, 12, *mockOutput.LastNumberReceived)
+
+	memory := machine.CopyMemory()
+	assert.Equal(t, []int{4, 3, 9, 12, 34, 12}, memory)
+}
+
 func TestTsvetokAssembler_AcceptsLabelsAsLocationsForJumping(t *testing.T) {
 	assemblyStr := `
 		jit 1, i.end
