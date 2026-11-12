@@ -6,18 +6,25 @@ import (
 	"strings"
 )
 
-// labelDeclarationPattern matches a valid label declaration line. A label must occupy its entire
-// line: a '.' followed by one or more of the letters, digits, dashes, and underscores
-var labelDeclarationPattern = regexp.MustCompile(`^\.[A-Za-z0-9_-]+$`)
+// labelNamePattern is the shape of a valid label name: a '.' followed by one or more of the
+// letters, digits, dashes, and underscores. This is the single source of truth for the name
+// shape; the patterns below are its anchorings (to an entire line for a regular declaration,
+// to the start of a line for error reporting, or to a parameter for a reference)
+var labelNamePattern = `\.[A-Za-z0-9_-]+`
+
+// labelDeclarationPattern matches a valid label declaration line: the name shape anchored to
+// the entire line, which a regular label must occupy of its own. It also matches a valid
+// label name in any chunk, since a chunk carries no whitespace; isDataLabel uses it that way
+var labelDeclarationPattern = regexp.MustCompile(`^` + labelNamePattern + `$`)
 
 // labelPrefixPattern matches the start of a valid label declaration; it is used to tell a label
 // that is followed by extraneous content apart from a label whose name is invalid to begin with
-var labelPrefixPattern = regexp.MustCompile(`^\.[A-Za-z0-9_-]+`)
+var labelPrefixPattern = regexp.MustCompile(`^` + labelNamePattern)
 
 // labelReferencePattern matches a valid reference to a label in a parameter position: a format
-// indicator (capture group 1; 'i' for immediate or '$' for address) followed by a dot and a
-// label name. This and labelDeclarationPattern are the single source of truth for label syntax
-var labelReferencePattern = regexp.MustCompile(`^([i$])\.[A-Za-z0-9_-]+$`)
+// indicator (capture group 1; 'i' for immediate or '$' for address) followed by the name
+// shape
+var labelReferencePattern = regexp.MustCompile(`^([i$])` + labelNamePattern + `$`)
 
 // labelReference is a reference to a label: the format indicator ('i' for immediate, '$' for
 // address) and the name of the label referred to
@@ -29,8 +36,9 @@ type labelReference struct {
 // labelExtractor is a helper object that extracts labels from a provided line of assembly
 // code, keeping track of what original line number it was either declared or used, and is
 // to be used to supply correct indexing information at assembly time. Note that there are
-// two usages of labels: declarations (e.g. `.main`, which must occupy a line of their own)
-// and accessions (e.g. `add i.main, 1, $.main`)
+// three usages of labels: regular declarations (e.g. `.main`, which occupy a line of their
+// own), data declarations (e.g. `.data 12`, a label name followed by data values), and
+// accessions (e.g. `add i.main, 1, $.main`)
 type labelExtractor struct {
 	labelsDeclared      map[string]tsvasmLine
 	labelAccessions     map[string]tsvasmLine
@@ -70,14 +78,52 @@ func (l *labelExtractor) ExtractLabels(line tsvasmLine) error {
 	return nil
 }
 
-// declareLabel validates that the line is a label declaration and records it, returning an
-// error if the label is invalid or was already declared
+// declareLabel validates that the line is a label declaration (regular or data) and records
+// it, returning an error if the label is invalid or was already declared
 func (l *labelExtractor) declareLabel(line tsvasmLine) error {
+	if isDataLabel(line) {
+		return l.declareDataLabel(line)
+	}
+
 	name, err := parseLabelDeclaration(line.assemblyCode)
 	if err != nil {
 		return err
 	}
 
+	return l.recordDeclaration(name, line)
+}
+
+// declareDataLabel records a data label (a label name followed by data values): the name is
+// declared exactly as a regular label, and every 'i.'/'$.' reference in the values is
+// recorded for ValidateAccessions
+func (l *labelExtractor) declareDataLabel(line tsvasmLine) error {
+	dataLabel, err := parseDataLabel(line.assemblyCode)
+	if err != nil {
+		return err
+	}
+
+	if err := l.recordDeclaration(dataLabel.name, line); err != nil {
+		return err
+	}
+
+	for _, value := range dataLabel.values {
+		if value.kind == dataValueLiteral {
+			continue
+		}
+
+		// Only record the first occurrence of a reference; it is what errors will point at
+		if !l.LabelAccessed(value.label) {
+			l.labelAccessions[value.label] = line
+			l.labelAccessionOrder = append(l.labelAccessionOrder, value.label)
+		}
+	}
+
+	return nil
+}
+
+// recordDeclaration records the name as declared on the given line, returning an error if the
+// name was already declared
+func (l *labelExtractor) recordDeclaration(name string, line tsvasmLine) error {
 	if firstDeclaration, declared := l.labelsDeclared[name]; declared {
 		return fmt.Errorf("'%v' is already declared on line %v: '%v'", name, firstDeclaration.lineNumber, firstDeclaration.assemblyCode)
 	}
@@ -87,10 +133,12 @@ func (l *labelExtractor) declareLabel(line tsvasmLine) error {
 	return nil
 }
 
-// parseLabelDeclaration validates that the given (already trimmed) line is a label declaration
-// and returns the declared name. A line that contains a valid label name followed by
-// extraneous content is a label that was not left alone on its line; a line whose name is
-// invalid to begin with is simply an invalid label
+// parseLabelDeclaration validates that the given (already trimmed) line is a regular label
+// declaration and returns the declared name. A line whose first chunk is a valid name
+// followed by data values is a data label (see parseDataLabel) and never reaches here; a
+// line with a valid name followed by other junk (`.foo.`) is a label that was not left
+// alone on its line; and a line whose name is invalid to begin with is simply an invalid
+// label
 func parseLabelDeclaration(line string) (string, error) {
 	if labelDeclarationPattern.MatchString(line) {
 		return line[1:], nil
