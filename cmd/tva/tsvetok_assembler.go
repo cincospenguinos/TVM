@@ -43,13 +43,42 @@ func (a *TsvetokAssembler) Assemble() ([]int, error) {
 			continue // a declaration emits no words
 		}
 
+		if isDataLabel(line) {
+			dataLabel, err := parseDataLabel(line.assemblyCode)
+			if err != nil {
+				return []int{}, errors.Join(err, fmt.Errorf("error on line '%v'", line.lineNumber))
+			}
+
+			labelIndexes[dataLabel.name] = currentIndex
+			currentIndex += len(dataLabel.values) // the data words occupy the label's slot
+			continue
+		}
+
 		currentIndex += instructionWords(line.extractChunks())
 	}
 
-	instructions := make([]*instructionBuilder, 0)
+	program := make([]int, 0)
+	pendingDataRefs := make([]pendingDataReference, 0)
+
 	for _, line := range linesOfCode {
 		if isLabelDeclaration(line) {
 			continue // a declaration emits no words
+		}
+
+		if isDataLabel(line) {
+			dataLabel, err := parseDataLabel(line.assemblyCode)
+			if err != nil {
+				return []int{}, errors.Join(err, fmt.Errorf("error on line '%v'", line.lineNumber))
+			}
+
+			var refs []pendingDataReference
+			program, refs, err = dataLabel.appendWords(labelIndexes, program)
+			if err != nil {
+				return []int{}, errors.Join(err, fmt.Errorf("error on line '%v'", line.lineNumber))
+			}
+
+			pendingDataRefs = append(pendingDataRefs, refs...)
+			continue
 		}
 
 		builder := &instructionBuilder{}
@@ -90,15 +119,14 @@ func (a *TsvetokAssembler) Assemble() ([]int, error) {
 			return []int{}, errors.Join(err, fmt.Errorf("error on line '%v'", line.lineNumber))
 		}
 
-		instructions = append(instructions, builder)
+		program = append(program, builder.toIntcode()...)
 	}
 
-	assembledProgram := make([]int, 0)
-	for _, builder := range instructions {
-		assembledProgram = append(assembledProgram, builder.toIntcode()...)
+	if err := resolveDataReferences(program, labelIndexes, pendingDataRefs); err != nil {
+		return []int{}, err
 	}
 
-	return assembledProgram, nil
+	return program, nil
 }
 
 // isLabelDeclaration reports whether the line is a label declaration (a label occupying its
