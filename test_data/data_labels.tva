@@ -1,0 +1,6 @@
+# data_labels.tva
+# Prints the first word stored at a data label, without ever executing the data.
+out $.value
+hlt
+.value 12 34
+.copy $.value

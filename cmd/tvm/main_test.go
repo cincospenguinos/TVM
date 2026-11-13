@@ -85,6 +85,12 @@ func TestRun(t *testing.T) {
 			wantExit:   0,
 			wantStdout: "1106\n",
 		},
+		{
+			name:       "the data labels sample prints the first stored word",
+			args:       []string{"../../test_data/data_labels.tvm"},
+			wantExit:   0,
+			wantStdout: "12\n",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			stdout := &bytes.Buffer{}
